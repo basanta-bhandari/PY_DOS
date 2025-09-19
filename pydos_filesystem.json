@@ -1,0 +1,30 @@
+{
+  "kernel": {
+    "/": {
+      "type": "directory",
+      "contents": {
+        "bin": {
+          "type": "directory",
+          "contents": {}
+        },
+        "usr": {
+          "type": "directory",
+          "contents": {}
+        },
+        "tmp": {
+          "type": "directory",
+          "contents": {}
+        },
+        "Summer_of_Making": {
+          "type": "directory",
+          "contents": {}
+        }
+      }
+    },
+    "/Summer_of_Making": {
+      "type": "directory",
+      "contents": {}
+    }
+  },
+  "current_directory": "/Summer_of_Making"
+}
