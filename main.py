@@ -1,6 +1,7 @@
 from utils import *
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for PyDOS"""
     clear_terminal()
     print(PY_DOS)
     print("PY DOS [Version 1.2] ")
@@ -13,3 +14,6 @@ if __name__ == "__main__":
             process_commands()
         except KeyboardInterrupt:
             break
+
+if __name__ == "__main__":
+    main()
