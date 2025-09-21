@@ -1,3 +1,4 @@
+
 import time
 import sys
 import random
@@ -9,6 +10,10 @@ import json
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 
 txt_files = {
+
+}
+
+exec_files ={
 
 }
 
@@ -108,11 +113,16 @@ def help_command(args=None):
     rmdir     ----->(removes a directory____________________________________; rmdir, rd)
     ls        ----->(lists contents in a directory__________________________; dir,   ls)
     mktf      ----->(creates text files_____________________________________; touch, copy con)
+    mkef      ----->(creates executable files_______________________________; [             ]) 
+    run       ----->(runs executable program/code files_____________________; [         ])
     vwtf      ----->(shows the contents of a text file______________________; echo,   cat)
     quit      ----->(exits the OS and saves changes made in system__________; ^C,     quit)
     format    ----->(starts the OS on a clean slate_________________________; format     )
     clear     ----->(clears the terminal____________________________________; clear,  cls)
-    
+
+    NOTE : [CD] [all cd commands work]
+         : [MKEF, RUN][please don't use main, utils or setup.py; THIS INCONVINIENCE I SOON TO BE FIXED.]
+         : [THE COMMANDS WHICH HAVE NO FUNCTION AND/OR ALTERNATIVE LISTING ARE SOON TO BE FIXED.]
     """)
 
 def normalize_path(path):
@@ -226,6 +236,7 @@ def ls_command():
     else:
         print("Current directory not found")
 
+
 def mktf_command(args):
     global txt_files
     if not args:
@@ -234,12 +245,12 @@ def mktf_command(args):
     
     file_name = args
     input_list = []
-    print(f"Write your text for '{file_name}' and type '\\s' on a new line to save.")
+    print(f"Write your text for '{file_name}' and type '\s' on a new line to save.")
     
     while True:
         try:
             line = input()
-            if line.strip() == '\\s':
+            if line.strip() == '\s':
                 break
             input_list.append(line)
         except EOFError:
@@ -262,6 +273,58 @@ def mktf_command(args):
     except Exception as e:
         print(f"An error occurred while writing to the file: {e}")
 
+
+def mkef_command(args):
+    global exec_files
+    if not args:
+        print("Usage: mkef <filename>")
+        return
+    
+    file_name = args
+    input_list = []
+    print(f"Write your code for '{file_name}' and type '\s' on a new line to save.")
+    
+    while True:
+        try:
+            line = input()
+            if line.strip() == '\s':
+                break
+            input_list.append(line)
+        except EOFError:
+            break
+        except Exception as e:
+            print(f"An unexpected error occurred during input: {e}")
+            return
+    
+    content_of_execfile = "\n".join(input_list)
+    exec_files[file_name] = content_of_execfile
+    
+    # Add file to current directory in kernel
+    if current_directory in kernel:
+        kernel[current_directory]['contents'][file_name] = {'type': 'file', 'content': content_of_execfile}
+    
+    try:
+        with open(file_name, "w") as file:
+            file.write(content_of_execfile)
+        print(f"File '{file_name}' created and code written successfully.")
+    except Exception as e:
+        print(f"An error occurred while writing to the file: {e}") 
+
+
+def run_command(args):
+    file_name = args
+    if not args:
+        print("Usage: run <filename>")
+        return
+    if file_name in exec_files:
+        with open(file_name, "r") as f:
+            code_to_execute = f.read()
+        exec(code_to_execute)
+    else:
+        print("File not found.")
+
+    
+    
 def vwtf_command(args):
     if not args:
         print("Usage: vwtf <filename>")
@@ -285,6 +348,8 @@ command_functions = {
     'vwtf': vwtf_command,
     'echo': vwtf_command,  # Basic alias
     'cat': vwtf_command,   # Unix alias
+    'mkef': mkef_command,
+    'run' : run_command
 }
 
 def clear_command():
@@ -324,3 +389,6 @@ def process_commands():
         no_args_command_functions[command]()
     else:
         print(f"'{command}' is not recognized as an internal or external command")
+
+
+
