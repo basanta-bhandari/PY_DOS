@@ -14,10 +14,6 @@
         "tmp": {
           "type": "directory",
           "contents": {}
-        },
-        "Summer_of_Making": {
-          "type": "directory",
-          "contents": {}
         }
       }
     },
@@ -26,5 +22,6 @@
       "contents": {}
     }
   },
-  "current_directory": "/Summer_of_Making"
+  "current_directory": "/",
+  "txt_files": {}
 }

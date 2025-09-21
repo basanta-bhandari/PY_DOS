@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: Py-DOS-B1
-Version: 1.0.0
+Version: 1.0.1
 Summary: A DOS-like operating system simulator with classic commands
 Author: Basanta Bhandari
 Author-email: bhandari.basanta.47@gmail.com
@@ -25,73 +25,86 @@ Dynamic: summary
 
 # PyDOS
 
-A nostalgic DOS-like operating system simulator that runs in your terminal! Experience the classic command-line interface with familiar DOS commands.
+A work-in-progress DOS simulator for the terminal. This is an early version that implements basic DOS-style commands and filesystem operations. Still figuring out the best way to handle some features, but it's functional enough to play around with.
 
-## Features
-
-- **Classic DOS Commands**: cd, mkdir, rmdir, ls/dir, and more
-- **File System**: Create and navigate directories with persistent storage
-- **Text File Support**: Create and view text files
-- **Authentic Experience**: DOS-style prompts and interface
-- **Cross-platform**: Works on Windows, macOS, and Linux
+```
+                            ██████╗ ██╗   ██╗    ██████╗  ██████╗ ███████╗
+                            ██╔══██╗╚██╗ ██╔╝    ██╔══██╗██╔═══██╗██╔════╝
+                            ██████╔╝ ╚████╔╝     ██║  ██║██║   ██║███████╗
+                            ██╔═══╝   ╚██╔╝      ██║  ██║██║   ██║╚════██║
+                            ██║        ██║       ██████╔╝╚██████╔╝███████║
+                            ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
+```
 
 ## Installation
 
-Install PyDOS using pipx (recommended):
+### Prerequisites
+- Python 3.7 or higher (check with `python3 --version` or `python --version`)
+- pip (comes with Python) or pipx
 
+### Installing pipx (recommended method)
+
+**Windows:**
+```powershell
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
+Restart your command prompt after installation.
+
+**macOS:**
 ```bash
-pipx install pydos
+brew install pipx
 ```
-
-Or using pip:
-
+Or if you don't have Homebrew:
 ```bash
-pip install pydos
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 ```
 
-## Usage
-
-Simply run:
-
+**Linux (Ubuntu/Debian):**
 ```bash
-pydos
+sudo apt update
+sudo apt install pipx
 ```
 
-## Available Commands
-
-- `cd` - Change directory
-- `mkdir` / `md` - Create directory  
-- `rmdir` / `rd` - Remove directory
-- `ls` / `dir` - List directory contents
-- `mktf` / `touch` - Create text files
-- `vwtf` / `cat` - View text file contents
-- `clear` / `cls` - Clear screen
-- `format` - Reset filesystem
-- `quit` - Exit PyDOS
-- `help` - Show help menu
-
-## Example Session
-
-```
-PY DOS \> mkdir projects
-Directory 'projects' created
-
-PY DOS \> cd projects
-PY DOS \projects> mktf hello.txt
-Write your text for 'hello.txt' and type '\s' on a new line to save.
-Hello, PyDOS world!
-\s
-File 'hello.txt' created successfully.
-
-PY DOS \projects> ls
-         hello.txt
-
-PY DOS \projects> vwtf hello.txt
-Hello, PyDOS world!
+**Linux (other distributions):**
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 ```
 
-## Author
+### Installing PyDOS
 
-Created by Basanta Bhandari
+**Method 1: Using pipx (recommended)**
+```bash
+pipx install Py-DOS-B1
+```
 
-Relive the classic computing experience with PyDOS! 🖥️
+**Method 2: Using pip**
+```bash
+pip install Py-DOS-B1
+```
+
+On some systems you may need to use `pip3`:
+```bash
+pip3 install Py-DOS-B1
+```
+
+### Running PyDOS
+```bash
+boot
+```
+
+### Troubleshooting
+
+**Command not found after installation:**
+- Close and reopen your terminal
+- On Windows: Make sure Python Scripts directory is in your PATH
+- On macOS/Linux: Make sure `~/.local/bin` is in your PATH
+- Try running: `python -m pip show Py-DOS-B1` to verify installation
+
+**Permission errors on Linux/macOS:**
+Add `--user` flag to pip install:
+```bash
+pip install --user Py-DOS-B1
+```

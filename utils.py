@@ -25,7 +25,7 @@ kernel = {
 current_directory = '/'
 
 PY_DOS="""
-                            ██████╗ ██╗   ██╗    ██████╗  ██████╗ ███████╗
+                            ██████╗ ██╗   ██╝    ██████╗  ██████╗ ███████╗
                             ██╔══██╗╚██╗ ██╔╝    ██╔══██╗██╔═══██╗██╔════╝
                             ██████╔╝ ╚████╔╝     ██║  ██║██║   ██║███████╗
                             ██╔═══╝   ╚██╔╝      ██║  ██║██║   ██║╚════██║
@@ -39,17 +39,18 @@ def save_filesystem():
     try:
         save_data = {
             'kernel': kernel,
-            'current_directory': current_directory
+            'current_directory': current_directory,
+            'txt_files': txt_files
         }
         with open(FILESYSTEM_FILE, 'w') as f:
             json.dump(save_data, f, indent=2)
-        print ("State : NS [N/E]")
+        print("State : NS [N/E]")
     except Exception as e:
         print(f"Error saving filesystem: {e}")
 
 def load_filesystem():
     """Load filesystem state from JSON, or use default if file doesn't exist"""
-    global kernel, current_directory
+    global kernel, current_directory, txt_files
     
     try:
         if os.path.exists(FILESYSTEM_FILE):
@@ -58,6 +59,7 @@ def load_filesystem():
             
             kernel = save_data.get('kernel', kernel)
             current_directory = save_data.get('current_directory', '/')
+            txt_files = save_data.get('txt_files', {})
             print("Filesystem loaded from previous session.")
         else:
             print("State: CS [N/E]")
@@ -65,17 +67,25 @@ def load_filesystem():
         print(f"State: SS [E/E]  ----> CS")
 
 def format_command():
+    """Format the filesystem - reset to default state"""
+    global kernel, current_directory, txt_files
     try:
-        save_data = {
-            'kernel': kernel,
-            'current_directory': current_directory
+        kernel = {
+            '/': {
+                'type': 'directory',
+                'contents': {
+                    'bin': {'type': 'directory', 'contents': {}},
+                    'usr': {'type': 'directory', 'contents': {}},
+                    'tmp': {'type': 'directory', 'contents': {}}
+                }
+            }
         }
-        with open(FILESYSTEM_FILE, 'w') as f:
-            data = json.load(f)
-            data = None
+        current_directory = '/'
+        txt_files = {}
+        save_filesystem()
+        print("Filesystem formatted successfully.")
     except Exception as e:
         print(f"Error formatting: {e}")
-    save_filesystem()
 
 def clear_terminal():
     if sys.platform.startswith('win'):
@@ -105,53 +115,100 @@ def help_command(args=None):
     
     """)
 
+def normalize_path(path):
+    """Normalize a path to handle .. and . properly"""
+    if path.startswith('/'):
+        parts = path.strip('/').split('/')
+    else:
+        parts = current_directory.strip('/').split('/')
+        if current_directory == '/':
+            parts = []
+        parts.extend(path.split('/'))
+    
+    normalized = []
+    for part in parts:
+        if part == '..':
+            if normalized:
+                normalized.pop()
+        elif part and part != '.':
+            normalized.append(part)
+    
+    return '/' + '/'.join(normalized) if normalized else '/'
+
 def cd_command(args):
     global current_directory
-    if not args or len(args) < 2:
+    if not args:
         print(current_directory)
         return
     
-    target = args
-    if target == '..':
-        if current_directory != '/':
-            # Go up one level
-            parts = current_directory.strip('/').split('/')
-            if len(parts) > 1:
-                current_directory = '/' + '/'.join(parts[:-1])
-            else:
-                current_directory = '/'
+    target_path = normalize_path(args)
+    
+    # Check if the target directory exists
+    if target_path in kernel and kernel[target_path]['type'] == 'directory':
+        current_directory = target_path
     else:
-        # Go to subdirectory
-        new_path = current_directory.rstrip('/') + '/' + target
-        if new_path in kernel or (current_directory in kernel and target in kernel[current_directory]['contents']):
-            current_directory = new_path
-        else:
-            print("Directory not found")
+        print("Directory not found")
 
 def mkdir_command(args):
-    dirname = args
-    if not args or len(args) < 2:
+    if not args:
         print("Usage: mkdir <directory_name>")
-    if current_directory in kernel:
-        kernel[current_directory]['contents'][dirname] = {'type': 'directory', 'contents': {}}
-        kernel[current_directory.rstrip('/') + '/' + dirname] = {'type': 'directory', 'contents': {}}
-        print(f"Directory '{dirname}' created")
-    else:
-        print("Current directory not found")
-
+        return
+        
+    dirname = args
+    new_path = normalize_path(dirname)
+    
+    # Check if directory already exists
+    if new_path in kernel:
+        print(f"Directory '{dirname}' already exists")
+        return
+    
+    # Check if parent directory exists
+    parent_path = '/'.join(new_path.split('/')[:-1]) or '/'
+    if parent_path not in kernel:
+        print("Parent directory not found")
+        return
+    
+    # Create the directory
+    kernel[new_path] = {'type': 'directory', 'contents': {}}
+    
+    # Add to parent's contents
+    if parent_path in kernel:
+        kernel[parent_path]['contents'][dirname] = {'type': 'directory', 'contents': {}}
+    
+    print(f"Directory '{dirname}' created")
 
 def rmdir_command(args):
-    if not args or len(args) < 2:
+    if not args:
         print("Usage: rmdir <directory_name>")
-    dirname = args
-    if current_directory in kernel:
-        contents = kernel[current_directory]['contents']
-        if dirname in contents:
-            contents.pop(dirname)
-        if not contents:
-            print("Directory is empty")
-        
+        return
     
+    dirname = args
+    target_path = normalize_path(dirname)
+    
+    # Check if directory exists
+    if target_path not in kernel:
+        print("Directory not found")
+        return
+    
+    # Check if it's a directory
+    if kernel[target_path]['type'] != 'directory':
+        print("Directory not found")
+        return
+    
+    # Check if directory is empty
+    if kernel[target_path]['contents']:
+        print("Directory is not empty")
+        return
+    
+    # Remove from kernel
+    del kernel[target_path]
+    
+    # Remove from parent's contents
+    parent_path = '/'.join(target_path.split('/')[:-1]) or '/'
+    if parent_path in kernel:
+        parent_name = target_path.split('/')[-1]
+        if parent_name in kernel[parent_path]['contents']:
+            del kernel[parent_path]['contents'][parent_name]
 
 def ls_command():
     if current_directory in kernel:
@@ -159,53 +216,58 @@ def ls_command():
         if not contents:
             print("Directory is empty")
         else:
+            print(f"Directory of {current_directory}")
+            print()
             for name, item in contents.items():
                 if item['type'] == 'directory':
-                    print(f"<DIR>    {name}")
+                    print(f"<DIR>          {name}")
                 else:
-                    print(f"         {name}")
+                    print(f"<FILE>         {name}")
     else:
         print("Current directory not found")
 
-
 def mktf_command(args):
     global txt_files
-    # Ensure correct number of arguments
-    if len(args) < 1:
+    if not args:
         print("Usage: mktf <filename>")
         return
+    
     file_name = args
     input_list = []
     print(f"Write your text for '{file_name}' and type '\\s' on a new line to save.")
+    
     while True:
         try:
             line = input()
-            # Check if the user has entered the save command on a new line
             if line.strip() == '\\s':
                 break
             input_list.append(line)
         except EOFError:
-            # Handle Ctrl+D (Unix) or Ctrl+Z (Windows) if the user ends the input stream
             break
         except Exception as e:
             print(f"An unexpected error occurred during input: {e}")
             return
-    # Combine the list of lines into a single string with newlines
+    
     content_of_txtfile = "\n".join(input_list)
     txt_files[file_name] = content_of_txtfile
+    
+    # Add file to current directory in kernel
+    if current_directory in kernel:
+        kernel[current_directory]['contents'][file_name] = {'type': 'file', 'content': content_of_txtfile}
+    
     try:
-        # Open the file in write mode ('w') and write the content
         with open(file_name, "w") as file:
-            file.write(content)
+            file.write(content_of_txtfile)
         print(f"File '{file_name}' created and content written successfully.")
     except Exception as e:
         print(f"An error occurred while writing to the file: {e}")
 
-
 def vwtf_command(args):
-    file_name= args
-    if not args or len(args) < 2:
-        print("Usage: rmdir <directory_name>")
+    if not args:
+        print("Usage: vwtf <filename>")
+        return
+        
+    file_name = args
     if file_name in txt_files:
         print(txt_files[file_name])
     else:
@@ -215,8 +277,14 @@ def vwtf_command(args):
 command_functions = {
     'cd': cd_command,
     'mkdir': mkdir_command,
+    'md': mkdir_command,  # DOS alias
     'rmdir': rmdir_command,
-    'mktf': mktf_command
+    'rd': rmdir_command,  # DOS alias
+    'mktf': mktf_command,
+    'touch': mktf_command,  # Unix alias
+    'vwtf': vwtf_command,
+    'echo': vwtf_command,  # Basic alias
+    'cat': vwtf_command,   # Unix alias
 }
 
 def clear_command():
@@ -224,42 +292,35 @@ def clear_command():
     print(PY_DOS)
     print("PY DOS [Version 1.2] ")
     print("Enter help for instruction menu. \n")
-    load_filesystem()
-    while True:
-        try:
-            process_commands()
-        except KeyboardInterrupt:
-            print("\n")
-            break
 
 def quit_command():
     save_filesystem()
+    print("Filesystem saved. Goodbye!")
     sys.exit()
 
-no_args_command_functions ={
+no_args_command_functions = {
     'ls': ls_command,
+    'dir': ls_command,  # DOS alias
     'help': help_command,
     'clear': clear_command,
-    'quit' : quit_command,
-    'format' : format_command,
+    'cls': clear_command,  # DOS alias
+    'quit': quit_command,
+    'format': format_command,
 }
-
-
 
 def process_commands():
     user_input = check_input()
     command_parts = user_input.strip().split()
     
-    if command_parts:
-        command = command_parts[0].lower()
-        
-        if command in command_functions:
-            command_functions[command](command_parts[1])
-        elif command in no_args_command_functions :
-            no_args_command_functions[command]()
-        else:
-            print(f"'{command}' is not recognized as an internal or external command")
+    if not command_parts:
+        return  # Empty input, just return
     
-
-    # If empty input, just show prompt again
-        
+    command = command_parts[0].lower()
+    args = ' '.join(command_parts[1:]) if len(command_parts) > 1 else None
+    
+    if command in command_functions:
+        command_functions[command](args)
+    elif command in no_args_command_functions:
+        no_args_command_functions[command]()
+    else:
+        print(f"'{command}' is not recognized as an internal or external command")
