@@ -4,8 +4,7 @@ if __name__ == "__main__":
     clear_terminal()
     print(PY_DOS)
     print("PY DOS [Version 1.3] ")
-    print("Enter help for instruction menu. ")
-    print("Please use quit for a better experience ")
+    print("ENTER 'help'  TO GET  STARTED.")
     load_filesystem()
     while True:
         try:

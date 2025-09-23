@@ -6,16 +6,9 @@ import os
 import platform
 import json
 
-
+FILE_CONTENT_FILE = 'pydos_file_contents.json'
+file_contents = {}  # Will store all file contents organized
 FILESYSTEM_FILE = 'pydos_filesystem.json'
-
-txt_files = {
-
-}
-
-exec_files ={
-
-}
 
 kernel = {
     '/': {
@@ -39,23 +32,42 @@ PY_DOS="""
                                               
 """
 
+def save_file_contents():
+    """Save all file contents to JSON"""
+    try:
+        with open(FILE_CONTENT_FILE, 'w') as f:
+            json.dump(file_contents, f, indent=2)
+    except Exception as e:
+        print(f"Error saving file contents: {e}")
+
+def load_file_contents():
+    """Load file contents from JSON"""
+    global file_contents
+    try:
+        if os.path.exists(FILE_CONTENT_FILE):
+            with open(FILE_CONTENT_FILE, 'r') as f:
+                file_contents = json.load(f)
+    except Exception as e:
+        print(f"Error loading file contents: {e}")
+        file_contents = {}
+
 def save_filesystem():
     """Save the current filesystem state to JSON"""
     try:
         save_data = {
             'kernel': kernel,
             'current_directory': current_directory,
-            'txt_files': txt_files
         }
         with open(FILESYSTEM_FILE, 'w') as f:
             json.dump(save_data, f, indent=2)
+        save_file_contents()  # Save file contents separately
         print("State : NS [N/E]")
     except Exception as e:
         print(f"Error saving filesystem: {e}")
 
 def load_filesystem():
-    """Load filesystem state from JSON, or use default if file doesn't exist"""
-    global kernel, current_directory, txt_files
+    """Load filesystem state from JSON"""
+    global kernel, current_directory
     
     try:
         if os.path.exists(FILESYSTEM_FILE):
@@ -64,7 +76,7 @@ def load_filesystem():
             
             kernel = save_data.get('kernel', kernel)
             current_directory = save_data.get('current_directory', '/')
-            txt_files = save_data.get('txt_files', {})
+            load_file_contents()  # Load file contents separately
             print("Filesystem loaded from previous session.")
         else:
             print("State: CS [N/E]")
@@ -73,7 +85,7 @@ def load_filesystem():
 
 def format_command():
     """Format the filesystem - reset to default state"""
-    global kernel, current_directory, txt_files
+    global kernel, current_directory, file_contents
     try:
         kernel = {
             '/': {
@@ -86,7 +98,7 @@ def format_command():
             }
         }
         current_directory = '/'
-        txt_files = {}
+        file_contents = {}  # Reset file contents too
         save_filesystem()
         print("Filesystem formatted successfully.")
     except Exception as e:
@@ -108,22 +120,21 @@ def check_input():
 def help_command(args=None):
     print("""
     AVAILABLE COMMANDS:
-    cd        ----->(changes the directory in which the user is situated____; cd       )
-    mkdir     ----->(creates a directory____________________________________; mkdir, md)
-    rmdir     ----->(removes a directory____________________________________; rmdir, rd)
-    ls        ----->(lists contents in a directory__________________________; dir,   ls)
-    mktf      ----->(creates text files_____________________________________; touch, copy con)
-    mkef      ----->(creates executable files_______________________________; [             ]) 
-    run       ----->(runs executable program/code files_____________________; [         ])
-    vwtf      ----->(shows the contents of a text file______________________; echo,   cat)
-    quit      ----->(exits the OS and saves changes made in system__________; ^C,     quit)
-    format    ----->(starts the OS on a clean slate_________________________; format     )
-    clear     ----->(clears the terminal____________________________________; clear,  cls)
-
-    NOTE : [CD] [all cd commands work]
-         : [MKEF, RUN][please don't use main, utils or setup.py; THIS INCONVINIENCE I SOON TO BE FIXED.]
-         : [THE COMMANDS WHICH HAVE NO FUNCTION AND/OR ALTERNATIVE LISTING ARE SOON TO BE FIXED.]
+    cd        ----->(changes the directory in which the user is situated____; cd       )                [MF, .. , ./]
+    mkdir     ----->(creates a directory____________________________________; mkdir,  md)               [MF--->main function]
+    rmdir     ----->(removes a directory____________________________________; rmdir,  rd)               [MF ]
+    ls        ----->(lists contents in a directory__________________________; dir,    ls)               [MF, dct, fls, .[extension] ]
+    mktf      ----->(creates text files_____________________________________; echo,   touch, copy con)  [MF--->main function]
+    mkef      ----->(creates exeutable files________________________________; [./], [.bat])             [MF--->main function]
+    rm        ----->(removes files from )                                   ; del, em)                  [MF, all]
+    run       ----->(runs executable program/code files_____________________; python,      start,)      [MF--->main function]
+    vwtf      ----->(shows the contents of a text file______________________; cat,    type )            [MF--->main function]
+    quit      ----->(exits the OS and saves changes made in system__________; ^C,      quit)            [MF--->main function]
+    format    ----->(starts the OS on a clean slate_________________________; format     )              [MF--->main function]
+    clear     ----->(clears the terminal____________________________________; clear,   cls)             [MF--->main function]
     """)
+
+
 
 def normalize_path(path):
     """Normalize a path to handle .. and . properly"""
@@ -157,7 +168,7 @@ def cd_command(args):
     if target_path in kernel and kernel[target_path]['type'] == 'directory':
         current_directory = target_path
     else:
-        print("Directory not found")
+        print("Current directory is non-accessable. " if current_directory == "/" else "Current directory not found.")
 
 def mkdir_command(args):
     if not args:
@@ -226,7 +237,7 @@ def ls_command():
         if not contents:
             print("Directory is empty")
         else:
-            print(f"Directory of {current_directory}")
+            print(f"Directory of {current_directory} " if current_directory != "/" else "")
             print()
             for name, item in contents.items():
                 if item['type'] == 'directory':
@@ -234,95 +245,115 @@ def ls_command():
                 else:
                     print(f"<FILE>         {name}")
     else:
-        print("Current directory not found")
+        print("Current directory not found.")
 
 
 def mktf_command(args):
-    global txt_files
     if not args:
         print("Usage: mktf <filename>")
         return
     
     file_name = args
     input_list = []
-    print(f"Write your text for '{file_name}' and type '\s' on a new line to save.")
+    print(f"Write your text for '{file_name}' and type '\\s' on a new line to save.")
     
     while True:
         try:
             line = input()
-            if line.strip() == '\s':
+            if line.strip() == '\\s':
                 break
             input_list.append(line)
         except EOFError:
             break
-        except Exception as e:
-            print(f"An unexpected error occurred during input: {e}")
-            return
     
-    content_of_txtfile = "\n".join(input_list)
-    txt_files[file_name] = content_of_txtfile
+    content = "\n".join(input_list)
     
-    # Add file to current directory in kernel
+    # Store in organized file contents
+    file_path = f"{current_directory}/{file_name}".replace('//', '/')
+    file_contents[file_path] = {
+        'type': 'txt',
+        'content': content,
+        'created_in': current_directory
+    }
+    
+    # Add to kernel
     if current_directory in kernel:
-        kernel[current_directory]['contents'][file_name] = {'type': 'file', 'content': content_of_txtfile}
+        kernel[current_directory]['contents'][file_name] = {'type': 'file'}
     
-    try:
-        with open(file_name, "w") as file:
-            file.write(content_of_txtfile)
-        print(f"File '{file_name}' created and content written successfully.")
-    except Exception as e:
-        print(f"An error occurred while writing to the file: {e}")
-
+    print(f"Text file '{file_name}' created successfully.")
 
 def mkef_command(args):
-    global exec_files
     if not args:
         print("Usage: mkef <filename>")
         return
     
     file_name = args
     input_list = []
-    print(f"Write your code for '{file_name}' and type '\s' on a new line to save.")
+    print(f"Write your code for '{file_name}' and type '\\s' on a new line to save.")
     
     while True:
         try:
             line = input()
-            if line.strip() == '\s':
+            if line.strip() == '\\s':
                 break
             input_list.append(line)
         except EOFError:
             break
-        except Exception as e:
-            print(f"An unexpected error occurred during input: {e}")
-            return
     
-    content_of_execfile = "\n".join(input_list)
-    exec_files[file_name] = content_of_execfile
+    content = "\n".join(input_list)
     
-    # Add file to current directory in kernel
+    # Store in organized file contents
+    file_path = f"{current_directory}/{file_name}".replace('//', '/')
+    file_contents[file_path] = {
+        'type': 'exe',
+        'content': content,
+        'created_in': current_directory
+    }
+    
+    # Add to kernel
     if current_directory in kernel:
-        kernel[current_directory]['contents'][file_name] = {'type': 'file', 'content': content_of_execfile}
+        kernel[current_directory]['contents'][file_name] = {'type': 'file'}
     
-    try:
-        with open(file_name, "w") as file:
-            file.write(content_of_execfile)
-        print(f"File '{file_name}' created and code written successfully.")
-    except Exception as e:
-        print(f"An error occurred while writing to the file: {e}") 
+    print(f"Executable file '{file_name}' created successfully.")
 
-
-def run_command(args):
-    file_name = args
+def rm_command(args):
     if not args:
-        print("Usage: run <filename>")
+        print("Usage: rm <filename>")
         return
-    if file_name in exec_files:
-        with open(file_name, "r") as f:
-            code_to_execute = f.read()
-        exec(code_to_execute)
+    
+    file_path = f"{current_directory}/{args}".replace('//', '/')
+
+    if file_path in file_contents:
+        del file_contents[file_path]
+        # Also remove from kernel
+        if current_directory in kernel and args in kernel[current_directory]['contents']:
+            del kernel[current_directory]['contents'][args]
+        print(f"File '{args}' deleted.")
+
+    elif args == 'all':
+        current_directory =  cdr
+        for i,z in cdr:
+            if i in txt_files or i in exe_files:
+                del kernel[current_directory]['contents'][i]
+        print ("All files")
     else:
         print("File not found.")
 
+def run_command(args):
+    if not args:
+        print("Usage: run <filename>")
+        return
+    
+    file_path = f"{current_directory}/{args}".replace('//', '/')
+
+    if file_path in file_contents and file_contents[file_path]['type'] == 'exe':
+        try:
+            code_to_execute = file_contents[file_path]['content']
+            exec(code_to_execute)
+        except Exception as e:
+            print(f"Error executing {args}: {e}")
+    else:
+        print("File not found or not an executable file.")
     
     
 def vwtf_command(args):
@@ -345,11 +376,17 @@ command_functions = {
     'rd': rmdir_command,  # DOS alias
     'mktf': mktf_command,
     'touch': mktf_command,  # Unix alias
+    'copy con' : mktf_command,
     'vwtf': vwtf_command,
-    'echo': vwtf_command,  # Basic alias
+    'echo': mktf_command,  # Basic alias
     'cat': vwtf_command,   # Unix alias
+    'type' :vwtf_command,
     'mkef': mkef_command,
-    'run' : run_command
+    'start': run_command,
+    'python' : run_command,
+    'run' : run_command,
+    'rm'  : rm_command,
+    'del' : rm_command
 }
 
 def clear_command():
@@ -372,6 +409,7 @@ no_args_command_functions = {
     'quit': quit_command,
     'format': format_command,
 }
+
 
 def process_commands():
     user_input = check_input()
