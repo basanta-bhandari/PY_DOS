@@ -1,1 +1,7 @@
-{}
+{
+  "/test1/t.txt": {
+    "type": "exe",
+    "content": "heallooo",
+    "created_in": "/test1"
+  }
+}
