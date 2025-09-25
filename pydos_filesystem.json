@@ -14,29 +14,9 @@
         "tmp": {
           "type": "directory",
           "contents": {}
-        },
-        "test1": {
-          "type": "directory",
-          "contents": {}
-        },
-        "test2": {
-          "type": "directory",
-          "contents": {}
         }
       }
-    },
-    "/test1": {
-      "type": "directory",
-      "contents": {
-        "t.txt": {
-          "type": "file"
-        }
-      }
-    },
-    "/test2": {
-      "type": "directory",
-      "contents": {}
     }
   },
-  "current_directory": "/test1"
+  "current_directory": "/"
 }
