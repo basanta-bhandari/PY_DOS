@@ -159,7 +159,9 @@ def rmdir_command(args):
         parent_name = target_path.split('/')[-1]
         if parent_name in kernel[parent_path]['contents']:
             del kernel[parent_path]['contents'][parent_name]
-
+file_name = args
+    source_path = f"{current_directory}/{file_name}".replace('//', '/')
+    content = file_contents[source_path]
 def ls_command():
     if current_directory not in kernel:
         print("Current directory not found.")
@@ -207,7 +209,9 @@ def mktf_command(args):
     if current_directory in kernel:
         kernel[current_directory]['contents'][file_name] = {'type': 'file'}
     print(f"Text file '{file_name}' created successfully.")
-
+    file_name = args
+    source_path = f"{current_directory}/{file_name}".replace('//', '/')
+    content = file_contents[source_path]
 def mkef_command(args):
     if not args:
         print("Usage: mkef <filename>")
@@ -217,7 +221,9 @@ def mkef_command(args):
     input_list = []
     print(f"Write your code for '{file_name}' and type '\\s' on a new line to save.")
     
-    while True:
+    while True:file_name = args
+    source_path = f"{current_directory}/{file_name}".replace('//', '/')
+    content = file_contents[source_path]
         try:
             line = input()
             if line.strip() == '\\s':
@@ -320,6 +326,52 @@ def move_command():
     del kernel[current_directory]['contents'][file_name]
     kernel[target_path]['contents'][file_name] = {'type': 'file'}
     print(f"File '{file_name}' moved to {target_path} successfully.")
+
+def  edit_command(args):
+    if not args:
+        print("Usage: edit <filename>")
+        return
+    file_name = args
+    file_path = f"{current_directory}/{args}".replace('//', '/')
+
+    if file_path in file_contents:
+        contents = file_contents[file_path]['content']  
+        print(f"""Edit your content for '{file_name}' and type '\\s' on a new line to save.
+                {contents}""")
+        while True:
+            input_list = []
+            content_list = content.split('\n')
+            input_list += contents_list
+            try: 
+                line = input()
+                if line.strip() == '\\s':
+                    break
+                input_list.append(line)
+            except EOFError:
+                break
+        content = "\n".join(input_list)
+        file_contents[file_path] = {
+            'type': 'exe',
+            'content': content,
+            'created_in': current_directory
+        }
+        if current_directory in kernel:
+            kernel[current_directory]['contents'][file_name] = {'type': 'file'}
+        print(f"New content saved on '{file_name}' successfully.")
+    else:
+        print("File not found.")
+   
+    
+  
+   
+
+  
+   
+    
+
+
+
+
 
 def vwtf_command(args):
     if not args:
