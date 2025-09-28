@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: Py-DOS-B1
-Version: 1.0.4
-Summary: A DOS-like operating system simulator with classic commands
+Version: 1.0.5
+Summary: An MS-DoS-like CLI OS made entirely in Python.
 Author: Basanta Bhandari
 Author-email: bhandari.basanta.47@gmail.com
 Classifier: Development Status :: 4 - Beta

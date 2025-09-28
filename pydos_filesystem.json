@@ -18,5 +18,9 @@
       }
     }
   },
-  "current_directory": "/"
+  "current_directory": "/",
+  "command_history": [
+    "format",
+    "quit"
+  ]
 }
