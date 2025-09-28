@@ -7,10 +7,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="Py-DOS-B1",
-    version="1.0.3",
+    version="1.0.4",
     author="Basanta Bhandari",
     author_email="bhandari.basanta.47@gmail.com",
-    description="A DOS-like operating system simulator with classic commands",
+    description="An MS-DoS-like CLI OS made entirely in Python.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     py_modules=["main", "utils"],

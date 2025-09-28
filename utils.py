@@ -4,11 +4,14 @@ import random
 import os
 import platform
 import json
+import readline
+import atexit
 
 FILE_CONTENT_FILE = 'pydos_file_contents.json'
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 
-file_contents = {}
+
+directory_contents = {}
 current_directory = '/'
 kernel = {
     '/': {
@@ -63,30 +66,40 @@ def normalize_path(path):
 def save_file_contents():
     try:
         with open(FILE_CONTENT_FILE, 'w') as f:
-            json.dump(file_contents, f, indent=2)
+            json.dump(directory_contents, f, indent=2)
     except Exception as e:
         print(f"Error saving file contents: {e}")
 
 def load_file_contents():
-    global file_contents
+    global directory_contents
     try:
         if os.path.exists(FILE_CONTENT_FILE):
             with open(FILE_CONTENT_FILE, 'r') as f:
-                file_contents = json.load(f)
+                directory_contents = json.load(f)
     except Exception as e:
         print(f"Error loading file contents: {e}")
-        file_contents = {}
+        directory_contents = {}
 
 def save_filesystem():
     try:
         save_data = {'kernel': kernel, 'current_directory': current_directory}
+        
+        # Add current command history (last 10 only)
+        history = []
+        try:
+            for i in range(readline.get_current_history_length()):
+                history.append(readline.get_history_item(i + 1))
+            save_data['command_history'] = history[-10:]  # Keep only last 10
+        except:
+            save_data['command_history'] = []
+            
         with open(FILESYSTEM_FILE, 'w') as f:
             json.dump(save_data, f, indent=2)
         save_file_contents()
         print("State : NS [N/E]")
     except Exception as e:
         print(f"Error saving filesystem: {e}")
-
+        
 def load_filesystem():
     global kernel, current_directory
     try:
@@ -159,9 +172,8 @@ def rmdir_command(args):
         parent_name = target_path.split('/')[-1]
         if parent_name in kernel[parent_path]['contents']:
             del kernel[parent_path]['contents'][parent_name]
-file_name = args
-    source_path = f"{current_directory}/{file_name}".replace('//', '/')
-    content = file_contents[source_path]
+
+
 def ls_command():
     if current_directory not in kernel:
         print("Current directory not found.")
@@ -200,7 +212,7 @@ def mktf_command(args):
     
     content = "\n".join(input_list)
     file_path = f"{current_directory}/{file_name}".replace('//', '/')
-    file_contents[file_path] = {
+    directory_contents[file_path] = {
         'type': 'txt',
         'content': content,
         'created_in': current_directory
@@ -209,11 +221,10 @@ def mktf_command(args):
     if current_directory in kernel:
         kernel[current_directory]['contents'][file_name] = {'type': 'file'}
     print(f"Text file '{file_name}' created successfully.")
-    file_name = args
-    source_path = f"{current_directory}/{file_name}".replace('//', '/')
-    content = file_contents[source_path]
+
 def mkef_command(args):
     if not args:
+
         print("Usage: mkef <filename>")
         return
     
@@ -221,9 +232,8 @@ def mkef_command(args):
     input_list = []
     print(f"Write your code for '{file_name}' and type '\\s' on a new line to save.")
     
-    while True:file_name = args
-    source_path = f"{current_directory}/{file_name}".replace('//', '/')
-    content = file_contents[source_path]
+    while True:
+        
         try:
             line = input()
             if line.strip() == '\\s':
@@ -234,7 +244,7 @@ def mkef_command(args):
     
     content = "\n".join(input_list)
     file_path = f"{current_directory}/{file_name}".replace('//', '/')
-    file_contents[file_path] = {
+    directory_contents[file_path] = {
         'type': 'exe',
         'content': content,
         'created_in': current_directory
@@ -254,15 +264,15 @@ def rm_command(args):
             files_to_remove = [name for name, item in kernel[current_directory]['contents'].items() if item['type'] == 'file']
             for file_name in files_to_remove:
                 file_path = f"{current_directory}/{file_name}".replace('//', '/')
-                if file_path in file_contents:
-                    del file_contents[file_path]
+                if file_path in directory_contents:
+                    del directory_contents[file_path]
                 del kernel[current_directory]['contents'][file_name]
             print("All files removed")
         return
     
     file_path = f"{current_directory}/{args}".replace('//', '/')
-    if file_path in file_contents:
-        del file_contents[file_path]
+    if file_path in directory_contents:
+        del directory_contents[file_path]
         if current_directory in kernel and args in kernel[current_directory]['contents']:
             del kernel[current_directory]['contents'][args]
         print(f"File '{args}' deleted.")
@@ -279,7 +289,7 @@ def copy_command(args):
     target_path = parts[1].strip()
     source_path = f"{current_directory}/{file_name}".replace('//', '/')
 
-    if source_path not in file_contents:
+    if source_path not in directory_contents:
         print("Source file not found")
         return
 
@@ -287,10 +297,10 @@ def copy_command(args):
         print("Target directory not found")
         return
 
-    content = file_contents[source_path]
+    content = directory_contents[source_path]
     target_file_path = f"{target_path}/{file_name}".replace('//', '/')
-    file_contents[target_file_path] = {
-        'type': file_contents[source_path]['type'],
+    directory_contents[target_file_path] = {
+        'type': directory_contents[source_path]['type'],
         'content': content['content'],
         'created_in': target_path
     }
@@ -298,7 +308,8 @@ def copy_command(args):
     kernel[target_path]['contents'][file_name] = {'type': 'file'}
     print(f"File '{file_name}' copied to {target_path} successfully.")
 
-def move_command():
+def move_command(args):
+
     if not args or ' to ' not in args:
         print("Usage: move <filename> to <directory>")
         return
@@ -308,7 +319,7 @@ def move_command():
     target_path = parts[1].strip()
     source_path = f"{current_directory}/{file_name}".replace('//', '/')
 
-    if source_path not in file_contents:
+    if source_path not in directory_contents:
         print("Source file not found")
         return
 
@@ -316,10 +327,10 @@ def move_command():
         print("Target directory not found")
         return
 
-    content = file_contents[source_path]
+    content = directory_contents[source_path]
     target_file_path = f"{target_path}/{file_name}".replace('//', '/')
-    file_contents[target_file_path] = {
-        'type': file_contents[source_path]['type'],
+    directory_contents[target_file_path] = {
+        'type': directory_contents[source_path]['type'],
         'content': content['content'],
         'created_in': target_path
     }
@@ -334,13 +345,13 @@ def  edit_command(args):
     file_name = args
     file_path = f"{current_directory}/{args}".replace('//', '/')
 
-    if file_path in file_contents:
-        contents = file_contents[file_path]['content']  
+    if file_path in directory_contents:
+        contents = directory_contents[file_path]['content']  
         print(f"""Edit your content for '{file_name}' and type '\\s' on a new line to save.
                 {contents}""")
         while True:
             input_list = []
-            content_list = content.split('\n')
+            contents_list = contents.split('\n')
             input_list += contents_list
             try: 
                 line = input()
@@ -350,7 +361,7 @@ def  edit_command(args):
             except EOFError:
                 break
         content = "\n".join(input_list)
-        file_contents[file_path] = {
+        directory_contents[file_path] = {
             'type': 'exe',
             'content': content,
             'created_in': current_directory
@@ -360,18 +371,6 @@ def  edit_command(args):
         print(f"New content saved on '{file_name}' successfully.")
     else:
         print("File not found.")
-   
-    
-  
-   
-
-  
-   
-    
-
-
-
-
 
 def vwtf_command(args):
     if not args:
@@ -379,27 +378,36 @@ def vwtf_command(args):
         return
         
     file_path = f"{current_directory}/{args}".replace('//', '/')
-    if file_path in file_contents:
-        print(file_contents[file_path]['content'])
+    if file_path in directory_contents:
+        print(directory_contents[file_path]['content'])
     else:
         print("File not found.")
 
 def rem_command(args):
     if not args or "to" not in args:
-        print("Usage: <orignalname> to <newname>")
+        print("Usage: rem <originalname> to <newname>")
+        return
     
-    parts =  args.split("to")
-    file_name = parts[0]
-    new_file_name = parts[1]
+    parts = args.split("to")
+    file_name = parts[0].strip()
+    new_file_name = parts[1].strip()
+    
+    file_path = f"{current_directory}/{file_name}".replace('//', '/')
 
-    if  file_name not in current_directory:
+
+    if file_path not in directory_contents:
         print("File not found.")
+        return
 
-    if new_file_name in current_directory:
+    new_file_path = f"{current_directory}/{new_file_name}".replace('//', '/')
+
+    if new_file_path in directory_contents:
         print("File already exists.")
-
-    if file_name in current_directory:
-        del kernel[current_directory]['contents'][file_name]
+        return
+    
+    if file_path in directory_contents:
+        directory_contents[new_file_path] = directory_contents[file_path]
+        del directory_contents[file_path]
         kernel[current_directory]['contents'][new_file_name] = {'type': 'file'}
         print(f" '{file_name}'  renamed to {new_file_name} successfully.")
 
@@ -416,9 +424,9 @@ def run_command(args):
         return
     
     file_path = f"{current_directory}/{args}".replace('//', '/')
-    if file_path in file_contents and file_contents[file_path]['type'] == 'exe':
+    if file_path in directory_contents and directory_contents[file_path]['type'] == 'exe':
         try:
-            code_to_execute = file_contents[file_path]['content']
+            code_to_execute = directory_contents[file_path]['content']
             exec(code_to_execute)
         except Exception as e:
             print(f"Error executing {args}: {e}")
@@ -447,7 +455,7 @@ def help_command(args=None):
     """)
 
 def format_command():
-    global kernel, current_directory, file_contents
+    global kernel, current_directory, directory_contents
     try:
         kernel = {
             '/': {
@@ -460,7 +468,7 @@ def format_command():
             }
         }
         current_directory = '/'
-        file_contents = {}
+        directory_contents = {}
         save_filesystem()
         print("Filesystem formatted successfully.")
     except Exception as e:
@@ -499,7 +507,8 @@ command_functions = {
     'del': rm_command,
     'copy': copy_command,
     'rem' : rem_command,
-    'move' : move_command
+    'move' : move_command,
+    'edit' : edit_command
 }
 
 no_args_command_functions = {
@@ -512,20 +521,64 @@ no_args_command_functions = {
     'format': format_command,
 }
 
+def setup_readline():
+    # Load history from your existing filesystem data
+    try:
+        if os.path.exists(FILESYSTEM_FILE):
+            with open(FILESYSTEM_FILE, 'r') as f:
+                save_data = json.load(f)
+            history = save_data.get('command_history', [])
+            
+            # Load each command into readline history
+            for command in history:
+                readline.add_history(command)
+                
+    except Exception as e:
+        pass  # If loading fails, start with empty history
+    
+    readline.set_history_length(10)  # Changed to 10
+
+def save_history():
+    # Get current history from readline
+    history = []
+    for i in range(readline.get_current_history_length()):
+        history.append(readline.get_history_item(i + 1))
+    
+    # Save it with your existing filesystem data
+    try:
+        if os.path.exists(FILESYSTEM_FILE):
+            with open(FILESYSTEM_FILE, 'r') as f:
+                save_data = json.load(f)
+        else:
+            save_data = {'kernel': kernel, 'current_directory': current_directory}
+        
+        save_data['command_history'] = history[-10:]  # Keep last 10 commands only
+        
+        with open(FILESYSTEM_FILE, 'w') as f:
+            json.dump(save_data, f, indent=2)
+    except Exception as e:
+        pass  # If saving fails, don't crash
+
 def process_commands():
     user_input = check_input()
     command_parts = user_input.strip().split()
     
-    if not command_parts:
+    if not command_parts:  # Move this check up here
         return
     
-    command = command_parts[0].lower()
+    command = command_parts[0].lower()  # Now this is safe
     args = ' '.join(command_parts[1:]) if len(command_parts) > 1 else None
-    
+
+    if not command_parts:
+        return
+
     if command in command_functions:
         command_functions[command](args)
+
     elif command in no_args_command_functions:
         no_args_command_functions[command]()
+
+
     else:
         print(f"'{command}' is not recognized as an internal or external command")
 
@@ -538,3 +591,4 @@ def process_commands():
 # File operations
 # System commands
 # Command processing
+
