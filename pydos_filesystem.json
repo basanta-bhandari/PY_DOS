@@ -20,7 +20,15 @@
   },
   "current_directory": "/",
   "command_history": [
-    "format",
-    "quit"
+    "cd test",
+    "dir",
+    "mktf test.txt",
+    "Hello, reviewer!",
+    "I was testing what you had trouble with",
+    "I think it works....",
+    "Like already",
+    "\\s",
+    "dir",
+    "vwtf test.txt"
   ]
 }

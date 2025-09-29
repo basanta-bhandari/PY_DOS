@@ -1,19 +1,20 @@
-
-
 from setuptools import setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+try:
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+except FileNotFoundError:
+    long_description = "An MS-DOS-like CLI OS made entirely in Python."
 
 setup(
     name="Py-DOS-B1",
-    version="1.0.5",
+    version="1.0.9",
     author="Basanta Bhandari",
     author_email="bhandari.basanta.47@gmail.com",
-    description="An MS-DoS-like CLI OS made entirely in Python.",
+    description="An MS-DOS-like CLI OS made entirely in Python.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    py_modules=["main", "utils"],s
+    py_modules=["main", "utils"],
     entry_points={
         "console_scripts": [
             "boot=main:main",
