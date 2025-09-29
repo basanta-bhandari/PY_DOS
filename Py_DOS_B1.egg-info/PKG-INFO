@@ -1,17 +1,25 @@
 Metadata-Version: 2.4
 Name: Py-DOS-B1
-Version: 1.0.9
+Version: 1.1.1
 Summary: An MS-DOS-like CLI OS made entirely in Python.
+Home-page: https://github.com/your-username/Py-DOS-B1
 Author: Basanta Bhandari
 Author-email: bhandari.basanta.47@gmail.com
+Project-URL: Bug Reports, https://github.com/basanta-bhandari/Py-DOS-B1/issues
+Project-URL: Source, https://github.com/basanta-bhandari/Py-DOS-B1/
+Keywords: dos,cli,terminal,simulator,shell
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: End Users/Desktop
+Classifier: Topic :: System :: Shells
+Classifier: Topic :: Utilities
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
@@ -20,6 +28,9 @@ Dynamic: author-email
 Dynamic: classifier
 Dynamic: description
 Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: project-url
 Dynamic: requires-python
 Dynamic: summary
 
