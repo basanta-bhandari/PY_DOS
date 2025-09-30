@@ -6,9 +6,11 @@ import platform
 import json
 import readline
 import atexit
+import pickle
+from pathlib import Path
 
-FILE_CONTENT_FILE = 'pydos_file_contents.json'
 FILESYSTEM_FILE = 'pydos_filesystem.json'
+SAVED_FOLDER = 'saved'  # All files stored here in binary
 
 directory_contents = {}
 current_directory = '/'
@@ -67,20 +69,31 @@ def join_path(base, name):
         return '/' + name
     return base + '/' + name
 
-# FILE SYSTEM PERSISTENCE
+def ensure_saved_folder():
+    """Ensure the saved folder exists"""
+    Path(SAVED_FOLDER).mkdir(exist_ok=True)
+
+# FILE SYSTEM PERSISTENCE WITH BINARY STORAGE
 def save_file_contents():
+    """Save all file contents to binary format in 'saved' folder"""
     try:
-        with open(FILE_CONTENT_FILE, 'w') as f:
-            json.dump(directory_contents, f, indent=2)
+        ensure_saved_folder()
+        file_path = Path(SAVED_FOLDER) / 'file_contents.bin'
+        with open(file_path, 'wb') as f:
+            pickle.dump(directory_contents, f)
     except Exception as e:
         print(f"Error saving file contents: {e}")
 
 def load_file_contents():
+    """Load file contents from binary storage"""
     global directory_contents
     try:
-        if os.path.exists(FILE_CONTENT_FILE):
-            with open(FILE_CONTENT_FILE, 'r') as f:
-                directory_contents = json.load(f)
+        file_path = Path(SAVED_FOLDER) / 'file_contents.bin'
+        if file_path.exists():
+            with open(file_path, 'rb') as f:
+                directory_contents = pickle.load(f)
+        else:
+            directory_contents = {}
     except Exception as e:
         print(f"Error loading file contents: {e}")
         directory_contents = {}
@@ -446,7 +459,14 @@ def run_command(args):
     if file_path in directory_contents and directory_contents[file_path]['type'] == 'exe':
         try:
             code_to_execute = directory_contents[file_path]['content']
-            exec(code_to_execute)
+            # Create a namespace with common imports available
+            exec_globals = {
+                '__builtins__': __builtins__,
+                '__name__': '__main__',
+                '__file__': args,
+            }
+            # Execute in the namespace
+            exec(code_to_execute, exec_globals)
         except Exception as e:
             print(f"Error executing {args}: {e}")
     else:
