@@ -20,7 +20,7 @@ kernel = {
         'contents': {
             'bin': {'type': 'directory', 'contents': {}},
             'usr': {'type': 'directory', 'contents': {}},
-            'tmp': {'type': 'directory', 'contents': {}}
+            'tmp': {'type': 'directory', 'contents': {}},
         }
     }
 }
@@ -452,25 +452,64 @@ def vwtf_command(args):
          
 def run_command(args):
     if not args:
-        print("Usage: run <filename>")
+        print("Usage: run <filename.py>")
         return
     
-    file_path = join_path(current_directory, args)
-    if file_path in directory_contents and directory_contents[file_path]['type'] == 'exe':
-        try:
-            code_to_execute = directory_contents[file_path]['content']
-            # Create a namespace with common imports available
-            exec_globals = {
-                '__builtins__': __builtins__,
-                '__name__': '__main__',
-                '__file__': args,
-            }
-            # Execute in the namespace
-            exec(code_to_execute, exec_globals)
-        except Exception as e:
-            print(f"Error executing {args}: {e}")
-    else:
-        print("File not found or not an executable file.")
+    file_name = args
+    file_path = f"{current_directory}/{file_name}".replace('//', '/')
+    
+    if file_path not in directory_contents:
+        print(f"File '{file_name}' not found.")
+        return
+    
+    if directory_contents[file_path]['type'] != 'exe':
+        print(f"'{file_name}' is not an executable file.")
+        return
+    
+    code = directory_contents[file_path]['content']
+    
+    exec_globals = {
+        '__builtins__': __builtins__,
+        '__name__': '__main__',
+        '__file__': file_path,
+    }
+    
+    import re
+    
+    # Find all imports
+    from_imports = re.findall(r'from\s+(\S+)\s+import', code)
+    direct_imports = re.findall(r'^import\s+(\S+)', code, re.MULTILINE)
+    
+    all_imports = set(from_imports + direct_imports)
+    
+    # Load PyDOS modules first
+    for module_name in all_imports:
+        module_file = f"{current_directory}/{module_name}.py".replace('//', '/')
+        
+        if module_file in directory_contents:
+            module_code = directory_contents[module_file]['content']
+            try:
+                exec(module_code, exec_globals)
+            except Exception as e:
+                print(f"Error loading module {module_name}: {e}")
+                return
+    
+    # Remove import statements for PyDOS modules from the code
+    for module_name in all_imports:
+        module_file = f"{current_directory}/{module_name}.py".replace('//', '/')
+        if module_file in directory_contents:
+            # Remove "from module import *" statements
+            code = re.sub(rf'from\s+{module_name}\s+import\s+\*\s*\n?', '', code)
+            # Remove "from module import x, y, z" statements
+            code = re.sub(rf'from\s+{module_name}\s+import\s+[^\n]+\n?', '', code)
+            # Remove "import module" statements
+            code = re.sub(rf'^import\s+{module_name}\s*\n?', '', code, flags=re.MULTILINE)
+    
+    # Execute the main code
+    try:
+        exec(code, exec_globals)
+    except Exception as e:
+        print(f"Error executing {file_name}: {e}")
 
 # SYSTEM COMMANDS
 def help_command(args=None):
@@ -523,7 +562,7 @@ def format_command():
 def clear_command():
     clear_terminal()
     print(PY_DOS)
-    print("PY DOS [Version 1.4]")
+    print("PY DOS [Version Beta]")
     print("Enter help for instruction menu.\n")
 
 def quit_command():

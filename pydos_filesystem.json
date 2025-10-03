@@ -20,6 +20,10 @@
   },
   "current_directory": "/",
   "command_history": [
-    "quit"
+    "clear",
+    "quit",
+    "help",
+    "source /home/basanta/Desktop/OS?/packaging_env/bin/activate",
+    "QUIT"
   ]
 }
