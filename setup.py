@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-# Get the long description from README
+
 long_description = "An MS-DOS-like CLI OS made entirely in Python."
 try:
     with open("README.md", "r", encoding="utf-8") as fh:
@@ -17,21 +17,21 @@ setup(
     description="An MS-DOS-like CLI OS made entirely in Python.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/Py-DOS-B1",  # Add your repo URL
+    url="https://github.com/your-username/Py-DOS-B1", 
     
-    # Use packages instead of py_modules for better reliability
+
     packages=find_packages(),
     py_modules=["main", "utils"],
     
-    # Entry points - this is the critical part
+
     entry_points={
         "console_scripts": [
             "boot=main:main",
-            "pydos=main:main",  # Alternative command name
+            "pydos=main:main",  
         ],
     },
     
-    # Alternative method using scripts (fallback)
+    
     scripts=["scripts/boot.py"] if os.path.exists("scripts/boot.py") else [],
     
     classifiers=[
@@ -53,16 +53,16 @@ setup(
     python_requires=">=3.7",
     install_requires=[],
     
-    # Include additional files
+
     include_package_data=True,
     package_data={
         "": ["*.md", "*.txt", "*.json"],
     },
     
-    # Keywords for better discoverability
+
     keywords="dos, cli, terminal, simulator, shell",
     
-    # Project URLs
+
     project_urls={
         "Bug Reports": "https://github.com/basanta-bhandari/Py-DOS-B1/issues",
         "Source": "https://github.com/basanta-bhandari/Py-DOS-B1/",

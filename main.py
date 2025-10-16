@@ -1,20 +1,20 @@
-#!/usr/bin/env python3
+
 """
 PyDOS Main Entry Point
 Handles various installation scenarios and import issues
 """
 
-import sys
+import sys          
 import os
 
 def bootstrap_imports():
     """Handle different import scenarios"""
     try:
-        # Standard import
+       
         import utils
         return utils
     except ImportError:
-        # Try adding current directory to path
+    
         current_dir = os.path.dirname(os.path.abspath(__file__))
         if current_dir not in sys.path:
             sys.path.insert(0, current_dir)
@@ -23,7 +23,7 @@ def bootstrap_imports():
             import utils
             return utils
         except ImportError:
-            # Last resort: try relative import
+           
             try:
                 from . import utils
                 return utils
@@ -33,20 +33,20 @@ def bootstrap_imports():
 def main():
     """Main entry point for PyDOS"""
     try:
-        # Bootstrap the imports
+
         utils = bootstrap_imports()
         
-        # Start PyDOS
+
         utils.clear_terminal()
         print(utils.PY_DOS)
         print("PY DOS [Version Beta]")
         print("ENTER 'help' TO GET STARTED.")
         
-        # Initialize system
+
         utils.setup_readline()
         utils.load_filesystem()
         
-        # Main loop
+
         while True:
             try:
                 print()
