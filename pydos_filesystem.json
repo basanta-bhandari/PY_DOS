@@ -19,5 +19,8 @@
     }
   },
   "current_directory": "/",
-  "command_history": []
+  "command_history": [
+    "help",
+    "quit"
+  ]
 }

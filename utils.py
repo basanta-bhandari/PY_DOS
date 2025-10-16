@@ -8,9 +8,11 @@ import readline
 import atexit
 import pickle
 from pathlib import Path
+import types
+import tempfile
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
-SAVED_FOLDER = 'saved'  # All files stored here in binary
+SAVED_FOLDER = 'saved'
 
 directory_contents = {}
 current_directory = '/'
@@ -34,7 +36,6 @@ PY_DOS = """
                             ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
 """
 
-# UTILITY FUNCTIONS
 def clear_terminal():
     os.system('cls' if sys.platform.startswith('win') else 'clear')
 
@@ -64,18 +65,14 @@ def normalize_path(path):
     return '/' + '/'.join(normalized) if normalized else '/'
 
 def join_path(base, name):
-    """Safely join paths handling root directory"""
     if base == '/':
         return '/' + name
     return base + '/' + name
 
 def ensure_saved_folder():
-    """Ensure the saved folder exists"""
     Path(SAVED_FOLDER).mkdir(exist_ok=True)
 
-# FILE SYSTEM PERSISTENCE WITH BINARY STORAGE
 def save_file_contents():
-    """Save all file contents to binary format in 'saved' folder"""
     try:
         ensure_saved_folder()
         file_path = Path(SAVED_FOLDER) / 'file_contents.bin'
@@ -85,7 +82,6 @@ def save_file_contents():
         print(f"Error saving file contents: {e}")
 
 def load_file_contents():
-    """Load file contents from binary storage"""
     global directory_contents
     try:
         file_path = Path(SAVED_FOLDER) / 'file_contents.bin'
@@ -102,7 +98,6 @@ def save_filesystem():
     try:
         save_data = {'kernel': kernel, 'current_directory': current_directory}
         
-        # Add current command history (last 10 only)
         history = []
         try:
             for i in range(readline.get_current_history_length()):
@@ -133,7 +128,6 @@ def load_filesystem():
     except Exception as e:
         print(f"State: SS [E/E]  ----> CS")
 
-# DIRECTORY COMMANDS
 def cd_command(args):
     global current_directory
     if not args:
@@ -238,7 +232,6 @@ def rem_command(args):
     save_filesystem()
     print(f"'{file_name}' renamed to '{new_file_name}' successfully.")
 
-# FILE COMMANDS
 def mktf_command(args):
     if not args:
         print("Usage: mktf <filename>")
@@ -449,7 +442,23 @@ def vwtf_command(args):
         print(directory_contents[file_path]['content'])
     else:
         print("File not found.")
-         
+
+def create_module_from_pydos_file(module_name, file_path):
+    if file_path not in directory_contents:
+        return None
+    
+    code = directory_contents[file_path]['content']
+    module = types.ModuleType(module_name)
+    module.__file__ = file_path
+    module.__name__ = module_name
+    
+    try:
+        exec(code, module.__dict__)
+        return module
+    except Exception as e:
+        print(f"Error loading module {module_name}: {e}")
+        return None
+
 def run_command(args):
     if not args:
         print("Usage: run <filename.py>")
@@ -474,44 +483,33 @@ def run_command(args):
         '__file__': file_path,
     }
     
-    import re
+    temp_dir = tempfile.mkdtemp()
+    original_path = sys.path.copy()
+    sys.path.insert(0, temp_dir)
     
-    # Find all imports
-    from_imports = re.findall(r'from\s+(\S+)\s+import', code)
-    direct_imports = re.findall(r'^import\s+(\S+)', code, re.MULTILINE)
-    
-    all_imports = set(from_imports + direct_imports)
-    
-    # Load PyDOS modules first
-    for module_name in all_imports:
-        module_file = f"{current_directory}/{module_name}.py".replace('//', '/')
-        
-        if module_file in directory_contents:
-            module_code = directory_contents[module_file]['content']
-            try:
-                exec(module_code, exec_globals)
-            except Exception as e:
-                print(f"Error loading module {module_name}: {e}")
-                return
-    
-    # Remove import statements for PyDOS modules from the code
-    for module_name in all_imports:
-        module_file = f"{current_directory}/{module_name}.py".replace('//', '/')
-        if module_file in directory_contents:
-            # Remove "from module import *" statements
-            code = re.sub(rf'from\s+{module_name}\s+import\s+\*\s*\n?', '', code)
-            # Remove "from module import x, y, z" statements
-            code = re.sub(rf'from\s+{module_name}\s+import\s+[^\n]+\n?', '', code)
-            # Remove "import module" statements
-            code = re.sub(rf'^import\s+{module_name}\s*\n?', '', code, flags=re.MULTILINE)
-    
-    # Execute the main code
     try:
+        for file_key in directory_contents:
+            if directory_contents[file_key]['type'] == 'exe':
+                if file_key.startswith(current_directory):
+                    rel_path = file_key[len(current_directory):].lstrip('/')
+                    if rel_path.endswith('.py'):
+                        temp_file = os.path.join(temp_dir, rel_path)
+                        os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+                        with open(temp_file, 'w') as f:
+                            f.write(directory_contents[file_key]['content'])
+        
         exec(code, exec_globals)
+        
     except Exception as e:
         print(f"Error executing {file_name}: {e}")
+    finally:
+        sys.path = original_path
+        import shutil
+        try:
+            shutil.rmtree(temp_dir)
+        except:
+            pass
 
-# SYSTEM COMMANDS
 def help_command(args=None):
     print("""
     AVAILABLE COMMANDS:
@@ -570,7 +568,6 @@ def quit_command():
     print("Filesystem saved. Goodbye!")
     sys.exit()
 
-# COMMAND PROCESSING
 command_functions = {
     'cd': cd_command,
     'mkdir': mkdir_command, 

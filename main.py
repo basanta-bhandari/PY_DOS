@@ -1,14 +1,9 @@
 
-"""
-PyDOS Main Entry Point
-Handles various installation scenarios and import issues
-"""
-
 import sys          
 import os
 
 def bootstrap_imports():
-    """Handle different import scenarios"""
+    
     try:
        
         import utils
@@ -31,7 +26,7 @@ def bootstrap_imports():
                 raise ImportError("Could not import utils module")
 
 def main():
-    """Main entry point for PyDOS"""
+ 
     try:
 
         utils = bootstrap_imports()
