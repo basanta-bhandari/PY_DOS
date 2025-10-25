@@ -11,10 +11,14 @@ from pathlib import Path
 import types
 import tempfile
 import psutil
+from datetime import datetime
+import threading
 
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 SAVED_FOLDER = 'saved'
+clock_running = False
+clock_thread = None
 
 directory_contents = {}
 current_directory = '/'
@@ -30,16 +34,52 @@ kernel = {
 }
 
 PY_DOS = """
+\n
+\n
                             ██████╗ ██╗   ██╗    ██████╗  ██████╗ ███████╗
                             ██╔══██╗╚██╗ ██╔╝    ██╔══██╗██╔═══██╗██╔════╝
                             ██████╔╝ ╚████╔╝     ██║  ██║██║   ██║███████╗
                             ██╔═══╝   ╚██╔╝      ██║  ██║██║   ██║╚════██║
                             ██║        ██║       ██████╔╝╚██████╔╝███████║
                             ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
+\n
 """
 
+def update_time_display():
+    global clock_running
+    
+    while clock_running:
+        current_time = datetime.now().strftime("%H:%M:%S")
+        sys.stdout.write(f"\033[s")
+        sys.stdout.write(f"\033[4;1H")
+        sys.stdout.write(f"Time: [{current_time}]" + " " * 20)
+        sys.stdout.write(f"\033[u")
+        sys.stdout.flush()
+        time.sleep(1)
+
+def start_clock():
+    global clock_running, clock_thread
+    clock_running = True
+    clock_thread = threading.Thread(target=update_time_display, daemon=True)
+    clock_thread.start()
+
+def stop_clock():
+    global clock_running
+    clock_running = False
+
+    
 def clear_terminal():
     os.system('cls' if sys.platform.startswith('win') else 'clear')
+
+def display_home():
+    clear_terminal()
+    print(PY_DOS)
+    print("PY DOS [Version Beta]")
+    print("ENTER 'help' TO GET STARTED.")
+    print("="*32)
+    get_battery_status()
+    update_time_display()
+    start_clock()
 
 def get_current_path():
     return current_directory.replace('/', '\\') if current_directory != '/' else '\\'
@@ -550,6 +590,7 @@ def help_command(args=None):
     quit      - exits and saves
     format    - resets filesystem
     clear     - clears terminal
+    reeboot   - reboots system
     """)
 
 def format_command():
@@ -580,14 +621,76 @@ def format_command():
 
 def clear_command():
     clear_terminal()
-    print(PY_DOS)
-    print("PY DOS [Version Beta]")
-    print("Enter help for instruction menu.\n")
+    display_home()
 
 def quit_command():
     save_filesystem()
     print("Filesystem saved. Goodbye!")
     sys.exit()
+
+def reboot_command():
+    def bootstrap_imports():
+    
+        try:
+        
+            import utils
+            return utils
+        except ImportError:
+        
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            if current_dir not in sys.path:
+                sys.path.insert(0, current_dir)
+            
+            try:
+                import utils
+                return utils
+            except ImportError:
+            
+                try:
+                    from . import utils
+                    return utils
+                except ImportError:
+                    raise ImportError("Could not import utils module")
+    try:
+
+        utils = bootstrap_imports()
+        
+
+        utils.display_home()
+
+        utils.setup_readline()
+        utils.load_filesystem()
+        
+
+        while True:
+            try:
+                print('\n')
+                utils.process_commands()
+            except KeyboardInterrupt:
+                print("\nUse 'quit' to exit safely.")
+                continue
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                continue
+                
+    except ImportError as e:
+        print(f"Error: Could not import required modules: {e}")
+        print("Please ensure PyDOS is properly installed.")
+        print("\nTry reinstalling with:")
+        print("  pip uninstall Py-DOS-B1")
+        print("  pip install Py-DOS-B1")
+        sys.exit(1)
+        
+    except Exception as e:
+        print(f"Fatal error starting PyDOS: {e}")
+        sys.exit(1)
+
+    def console_entry_point():
+        """Alternative entry point for console scripts"""
+        main()
+
+    if __name__ == "__main__":
+        main()
 
 command_functions = {
     'cd': cd_command,
@@ -622,6 +725,7 @@ no_args_command_functions = {
     'cls': clear_command,
     'quit': quit_command,
     'format': format_command,
+    'reboot': reboot_command,
 }
 
 def setup_readline():

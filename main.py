@@ -32,13 +32,7 @@ def main():
         utils = bootstrap_imports()
         
 
-        utils.clear_terminal()
-        print(utils.PY_DOS)
-        print("PY DOS [Version Beta]")
-        print("ENTER 'help' TO GET STARTED.")
-        print("Time: []")
-        utils.get_battery_status()
-        
+        utils.display_home()
 
         utils.setup_readline()
         utils.load_filesystem()
