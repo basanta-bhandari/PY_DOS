@@ -36,6 +36,8 @@ def main():
         print(utils.PY_DOS)
         print("PY DOS [Version Beta]")
         print("ENTER 'help' TO GET STARTED.")
+        print("Time: []")
+        utils.get_battery_status()
         
 
         utils.setup_readline()

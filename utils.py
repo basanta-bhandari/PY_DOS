@@ -10,6 +10,8 @@ import pickle
 from pathlib import Path
 import types
 import tempfile
+import psutil
+
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 SAVED_FOLDER = 'saved'
@@ -127,6 +129,25 @@ def load_filesystem():
             print("State: CS [N/E]")
     except Exception as e:
         print(f"State: SS [E/E]  ----> CS")
+
+def get_battery_status():
+    battery = psutil.sensors_battery()
+    if battery is None:
+        print("No battery found on this system.")
+        return
+
+    print(f"Battery Percentage: {battery.percent // 1}%")
+    print(f"Power Plugged In: {battery.power_plugged}")
+
+    if battery.secsleft == psutil.POWER_TIME_UNLIMITED:
+        print("Time Remaining: Unlimited (charging or fully charged)")
+    elif battery.secsleft == psutil.POWER_TIME_UNKNOWN:
+        print("Time Remaining: Unknown")
+    else:
+        minutes, seconds = divmod(battery.secsleft, 60)
+        hours, minutes = divmod(minutes, 60)
+        print(f"Time Remaining: {int(hours)}h {int(minutes)}m {int(seconds)}s")
+        
 
 def cd_command(args):
     global current_directory
