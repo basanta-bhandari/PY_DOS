@@ -5,6 +5,7 @@ import os
 import platform
 import json
 import readline
+import readchar
 import atexit
 import pickle
 from pathlib import Path
@@ -51,7 +52,7 @@ def update_time_display():
     while clock_running:
         current_time = datetime.now().strftime("%H:%M:%S")
         sys.stdout.write(f"\033[s")
-        sys.stdout.write(f"\033[4;1H")
+        sys.stdout.write(f"\033[12;1H")
         sys.stdout.write(f"Time: [{current_time}]" + " " * 20)
         sys.stdout.write(f"\033[u")
         sys.stdout.flush()
@@ -74,12 +75,13 @@ def clear_terminal():
 def display_home():
     clear_terminal()
     print(PY_DOS)
-    print("PY DOS [Version Beta]")
+    print("PY DOS [Version Alpha]")
     print("ENTER 'help' TO GET STARTED.")
     print("="*32)
     get_battery_status()
     update_time_display()
     start_clock()
+    
 
 def get_current_path():
     return current_directory.replace('/', '\\') if current_directory != '/' else '\\'
@@ -173,20 +175,28 @@ def load_filesystem():
 def get_battery_status():
     battery = psutil.sensors_battery()
     if battery is None:
-        print("No battery found on this system.")
+        print("Battery: [################] 100% ⚡ | Desktop")
         return
 
-    print(f"Battery Percentage: {battery.percent // 1}%")
-    print(f"Power Plugged In: {battery.power_plugged}")
-
+    percent = int(battery.percent)
+    filled = int(percent / 5)
+    empty = 20 - filled
+    bar = "#" * filled + ":" * empty
+    
+    icon = "⚡" if battery.power_plugged else ""
+    
     if battery.secsleft == psutil.POWER_TIME_UNLIMITED:
-        print("Time Remaining: Unlimited (charging or fully charged)")
+        time_str = "Charging"
     elif battery.secsleft == psutil.POWER_TIME_UNKNOWN:
-        print("Time Remaining: Unknown")
+        time_str = "Unknown"
     else:
         minutes, seconds = divmod(battery.secsleft, 60)
         hours, minutes = divmod(minutes, 60)
-        print(f"Time Remaining: {int(hours)}h {int(minutes)}m {int(seconds)}s")
+        time_str = f"{int(hours)}h {int(minutes)}m"
+    
+    print(f"Battery: [{bar}] {percent}% {icon}")
+    print(f"Time Left: {time_str}")
+
         
 
 def cd_command(args):
@@ -459,40 +469,66 @@ def edit_command(args):
     file_name = args
     file_path = join_path(current_directory, args)
 
-    if file_path in directory_contents:
-        contents = directory_contents[file_path]['content']  
-        print(f"Edit your content for '{file_name}' and type '\\s' on a new line to save.")
-        print("Current content:")
-        print(contents)
-        print("--- Continue editing below ---")
-        
-        input_list = []
-        contents_list = contents.split('\n')
-        input_list += contents_list
-        
-        while True:
-            try: 
-                line = input()
-                if line.strip() == '\\s':
-                    break
-                input_list.append(line)
-            except EOFError:
-                break
-                
-        content = "\n".join(input_list)
-        directory_contents[file_path] = {
-            'type': directory_contents[file_path]['type'],
-            'content': content,
-            'created_in': current_directory
-        }
-        if current_directory in kernel:
-            kernel[current_directory]['contents'][file_name] = {'type': 'file'}
-        save_file_contents()
-        save_filesystem()
-        print(f"New content saved on '{file_name}' successfully.")
-    else:
+    if file_path not in directory_contents:
         print("File not found.")
-
+        return
+        
+    contents = directory_contents[file_path]['content']
+    lines = contents.split('\n')
+    current_line = 0
+    
+    print(f"Editing '{file_name}'. Commands: Ctrl+S (save), Ctrl+Q (quit), Ctrl+D (delete line)")
+    print("Arrow keys: UP/DOWN to navigate lines, ENTER to edit current line")
+    
+    def display_lines():
+        clear_terminal()
+        print(f"=== Editing: {file_name} ===\n")
+        for i, line in enumerate(lines):
+            prefix = ">" if i == current_line else " "
+            print(f"{prefix} {i + 1}: {line}")
+        print(f"\n[Line {current_line + 1}/{len(lines)}] Ctrl+S=Save | Ctrl+Q=Quit | Ctrl+D=Delete")
+    
+    display_lines()
+    
+    while True:
+        try:
+            key = readchar.readkey()
+            
+            if key == readchar.key.UP and current_line > 0:
+                current_line -= 1
+                display_lines()
+            elif key == readchar.key.DOWN and current_line < len(lines) - 1:
+                current_line += 1
+                display_lines()
+            elif key == readchar.key.ENTER or key == '\r' or key == '\n':
+                print(f"\n\nEditing line {current_line + 1}:")
+                readline.set_startup_hook(lambda: readline.insert_text(lines[current_line]))
+                try:
+                    new_content = input("")
+                    lines[current_line] = new_content
+                finally:
+                    readline.set_startup_hook()
+                display_lines()
+            elif key == '\x13':
+                content = "\n".join(lines)
+                directory_contents[file_path]['content'] = content
+                save_file_contents()
+                save_filesystem()
+                print(f"\nSaved '{file_name}'")
+                time.sleep(1)
+                display_lines()
+            elif key == '\x11':
+                break
+            elif key == '\x04':
+                if 0 <= current_line < len(lines):
+                    del lines[current_line]
+                    if current_line >= len(lines) and lines:
+                        current_line = len(lines) - 1
+                    display_lines()
+                        
+        except KeyboardInterrupt:
+            break
+        
 def vwtf_command(args):
     if not args:
         print("Usage: vwtf <filename>")
@@ -620,77 +656,23 @@ def format_command():
         print(f"Error formatting: {e}")
 
 def clear_command():
+    stop_clock()
     clear_terminal()
     display_home()
+    
 
 def quit_command():
+    stop_clock()
     save_filesystem()
     print("Filesystem saved. Goodbye!")
     sys.exit()
 
 def reboot_command():
-    def bootstrap_imports():
-    
-        try:
-        
-            import utils
-            return utils
-        except ImportError:
-        
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            if current_dir not in sys.path:
-                sys.path.insert(0, current_dir)
-            
-            try:
-                import utils
-                return utils
-            except ImportError:
-            
-                try:
-                    from . import utils
-                    return utils
-                except ImportError:
-                    raise ImportError("Could not import utils module")
-    try:
-
-        utils = bootstrap_imports()
-        
-
-        utils.display_home()
-
-        utils.setup_readline()
-        utils.load_filesystem()
-        
-
-        while True:
-            try:
-                print('\n')
-                utils.process_commands()
-            except KeyboardInterrupt:
-                print("\nUse 'quit' to exit safely.")
-                continue
-            except Exception as e:
-                print(f"An error occurred: {e}")
-                continue
-                
-    except ImportError as e:
-        print(f"Error: Could not import required modules: {e}")
-        print("Please ensure PyDOS is properly installed.")
-        print("\nTry reinstalling with:")
-        print("  pip uninstall Py-DOS-B1")
-        print("  pip install Py-DOS-B1")
-        sys.exit(1)
-        
-    except Exception as e:
-        print(f"Fatal error starting PyDOS: {e}")
-        sys.exit(1)
-
-    def console_entry_point():
-        """Alternative entry point for console scripts"""
-        main()
-
-    if __name__ == "__main__":
-        main()
+    stop_clock()
+    save_filesystem()
+    print("Rebooting...")
+    time.sleep(1)
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 command_functions = {
     'cd': cd_command,

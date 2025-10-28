@@ -14,21 +14,36 @@
         "tmp": {
           "type": "directory",
           "contents": {}
+        },
+        "test": {
+          "type": "directory",
+          "contents": {}
+        }
+      }
+    },
+    "/test": {
+      "type": "directory",
+      "contents": {
+        "test.py": {
+          "type": "file"
+        },
+        "test.txt": {
+          "type": "file"
         }
       }
     }
   },
-  "current_directory": "/",
+  "current_directory": "/test",
   "command_history": [
-    "clear",
+    "ls",
+    "edit test.py",
+    "reboot",
+    "quit",
+    "reboot",
     "quit",
     "reboot",
     "quit",
     "reboot",
-    "quiit",
-    "quit",
-    "test",
-    "exit",
     "quit"
   ]
 }

@@ -40,7 +40,7 @@ def main():
 
         while True:
             try:
-                print()
+                print('\n')
                 utils.process_commands()
             except KeyboardInterrupt:
                 print("\nUse 'quit' to exit safely.")
