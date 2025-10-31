@@ -35,15 +35,15 @@
   },
   "current_directory": "/test",
   "command_history": [
+    "ds",
     "ls",
     "edit test.py",
-    "reboot",
+    "print(\"to be fixed!\"",
+    "print(\"to be fixed!\")",
     "quit",
-    "reboot",
-    "quit",
-    "reboot",
-    "quit",
-    "reboot",
-    "quit"
+    "edit test.py",
+    "ls",
+    "run test.py",
+    "reboot"
   ]
 }

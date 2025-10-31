@@ -466,69 +466,28 @@ def edit_command(args):
     if not args:
         print("Usage: edit <filename>")
         return
-    file_name = args
+    
     file_path = join_path(current_directory, args)
-
     if file_path not in directory_contents:
         print("File not found.")
         return
-        
-    contents = directory_contents[file_path]['content']
-    lines = contents.split('\n')
-    current_line = 0
     
-    print(f"Editing '{file_name}'. Commands: Ctrl+S (save), Ctrl+Q (quit), Ctrl+D (delete line)")
-    print("Arrow keys: UP/DOWN to navigate lines, ENTER to edit current line")
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        f.write(directory_contents[file_path]['content'])
+        temp_path = f.name
     
-    def display_lines():
-        clear_terminal()
-        print(f"=== Editing: {file_name} ===\n")
-        for i, line in enumerate(lines):
-            prefix = ">" if i == current_line else " "
-            print(f"{prefix} {i + 1}: {line}")
-        print(f"\n[Line {current_line + 1}/{len(lines)}] Ctrl+S=Save | Ctrl+Q=Quit | Ctrl+D=Delete")
+    editor = os.environ.get('EDITOR', 'nano')
+    os.system(f"{editor} {temp_path}")
     
-    display_lines()
+    with open(temp_path, 'r') as f:
+        directory_contents[file_path]['content'] = f.read()
     
-    while True:
-        try:
-            key = readchar.readkey()
-            
-            if key == readchar.key.UP and current_line > 0:
-                current_line -= 1
-                display_lines()
-            elif key == readchar.key.DOWN and current_line < len(lines) - 1:
-                current_line += 1
-                display_lines()
-            elif key == readchar.key.ENTER or key == '\r' or key == '\n':
-                print(f"\n\nEditing line {current_line + 1}:")
-                readline.set_startup_hook(lambda: readline.insert_text(lines[current_line]))
-                try:
-                    new_content = input("")
-                    lines[current_line] = new_content
-                finally:
-                    readline.set_startup_hook()
-                display_lines()
-            elif key == '\x13':
-                content = "\n".join(lines)
-                directory_contents[file_path]['content'] = content
-                save_file_contents()
-                save_filesystem()
-                print(f"\nSaved '{file_name}'")
-                time.sleep(1)
-                display_lines()
-            elif key == '\x11':
-                break
-            elif key == '\x04':
-                if 0 <= current_line < len(lines):
-                    del lines[current_line]
-                    if current_line >= len(lines) and lines:
-                        current_line = len(lines) - 1
-                    display_lines()
-                        
-        except KeyboardInterrupt:
-            break
-        
+    os.unlink(temp_path)
+    save_file_contents()
+    save_filesystem()
+    print(f"Saved '{args}'")
+
 def vwtf_command(args):
     if not args:
         print("Usage: vwtf <filename>")
