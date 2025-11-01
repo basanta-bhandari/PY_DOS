@@ -14,36 +14,12 @@
         "tmp": {
           "type": "directory",
           "contents": {}
-        },
-        "test": {
-          "type": "directory",
-          "contents": {}
-        }
-      }
-    },
-    "/test": {
-      "type": "directory",
-      "contents": {
-        "test.py": {
-          "type": "file"
-        },
-        "test.txt": {
-          "type": "file"
         }
       }
     }
   },
-  "current_directory": "/test",
+  "current_directory": "/",
   "command_history": [
-    "ds",
-    "ls",
-    "edit test.py",
-    "print(\"to be fixed!\"",
-    "print(\"to be fixed!\")",
-    "quit",
-    "edit test.py",
-    "ls",
-    "run test.py",
-    "reboot"
+    "quit"
   ]
 }

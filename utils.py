@@ -198,6 +198,29 @@ def get_battery_status():
     print(f"Time Left: {time_str}")
 
         
+def install_command(args):
+    if not args:
+        print("Usage: install <package_name>")
+        return
+    
+    import subprocess
+    result = subprocess.run([sys.executable, '-m', 'pip', 'install', args], 
+                          capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print(result.stderr)
+
+def uninstall_command(args):
+    if not args:
+        print("Usage: uninstall <package_name>")
+        return
+    
+    import subprocess
+    result = subprocess.run([sys.executable, '-m', 'pip', 'uninstall', '-y', args], 
+                          capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print(result.stderr)
 
 def cd_command(args):
     global current_directory
@@ -309,20 +332,28 @@ def mktf_command(args):
         return
     
     file_name = args
-    input_list = []
-    print(f"Write your text for '{file_name}' and type '\\s' on a new line to save.")
-    
-    while True:
-        try:
-            line = input()
-            if line.strip() == '\\s':
-                break
-            input_list.append(line)
-        except EOFError:
-            break
-    
-    content = "\n".join(input_list)
     file_path = join_path(current_directory, file_name)
+    
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        temp_path = f.name
+    
+    stop_clock()
+    
+    print("\nCreating text file...")
+    print("Press 'i' to start typing | 'Esc' to stop | ':wq' to save and exit | ':q!' to exit without saving")
+    input("Press ENTER to continue...")
+    
+    if sys.platform.startswith('win'):
+        os.system(f"notepad {temp_path}")
+    else:
+        os.system(f"nvim {temp_path}")
+    
+    start_clock()
+    
+    with open(temp_path, 'r') as f:
+        content = f.read()
+    
     directory_contents[file_path] = {
         'type': 'txt',
         'content': content,
@@ -331,6 +362,8 @@ def mktf_command(args):
     
     if current_directory in kernel:
         kernel[current_directory]['contents'][file_name] = {'type': 'file'}
+    
+    os.unlink(temp_path)
     save_file_contents()
     save_filesystem()
     print(f"Text file '{file_name}' created successfully.")
@@ -341,20 +374,28 @@ def mkef_command(args):
         return
     
     file_name = args
-    input_list = []
-    print(f"Write your code for '{file_name}' and type '\\s' on a new line to save.")
-    
-    while True:
-        try:
-            line = input()
-            if line.strip() == '\\s':
-                break
-            input_list.append(line)
-        except EOFError:
-            break
-    
-    content = "\n".join(input_list)
     file_path = join_path(current_directory, file_name)
+    
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        temp_path = f.name
+    
+    stop_clock()
+    
+    print("\nCreating executable file...")
+    print("Press 'i' to start typing | 'Esc' to stop | ':wq' to save and exit | ':q!' to exit without saving")
+    input("Press ENTER to continue...")
+    
+    if sys.platform.startswith('win'):
+        os.system(f"notepad {temp_path}")
+    else:
+        os.system(f"nvim {temp_path}")
+    
+    start_clock()
+    
+    with open(temp_path, 'r') as f:
+        content = f.read()
+    
     directory_contents[file_path] = {
         'type': 'exe',
         'content': content,
@@ -363,6 +404,8 @@ def mkef_command(args):
     
     if current_directory in kernel:
         kernel[current_directory]['contents'][file_name] = {'type': 'file'}
+    
+    os.unlink(temp_path)
     save_file_contents()
     save_filesystem()
     print(f"Executable file '{file_name}' created successfully.")
@@ -477,8 +520,18 @@ def edit_command(args):
         f.write(directory_contents[file_path]['content'])
         temp_path = f.name
     
-    editor = os.environ.get('EDITOR', 'nano')
-    os.system(f"{editor} {temp_path}")
+    stop_clock()
+    
+    print("\nOpening editor...")
+    print("Press 'i' to start typing | 'Esc' to stop | ':wq' to save and exit | ':q!' to exit without saving")
+    input("Press ENTER to continue...")
+    
+    if sys.platform.startswith('win'):
+        os.system(f"notepad {temp_path}")
+    else:
+        os.system(f"nvim {temp_path}")
+    
+    start_clock()
     
     with open(temp_path, 'r') as f:
         directory_contents[file_path]['content'] = f.read()
@@ -545,14 +598,13 @@ def run_command(args):
     
     try:
         for file_key in directory_contents:
-            if directory_contents[file_key]['type'] == 'exe':
-                if file_key.startswith(current_directory):
-                    rel_path = file_key[len(current_directory):].lstrip('/')
-                    if rel_path.endswith('.py'):
-                        temp_file = os.path.join(temp_dir, rel_path)
-                        os.makedirs(os.path.dirname(temp_file), exist_ok=True)
-                        with open(temp_file, 'w') as f:
-                            f.write(directory_contents[file_key]['content'])
+            if directory_contents[file_key]['type'] == 'exe' and file_key.endswith('.py'):
+                parts = file_key.strip('/').split('/')
+                rel_path = '/'.join(parts)
+                temp_file = os.path.join(temp_dir, rel_path)
+                os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+                with open(temp_file, 'w') as f:
+                    f.write(directory_contents[file_key]['content'])
         
         exec(code, exec_globals)
         
@@ -585,7 +637,9 @@ def help_command(args=None):
     quit      - exits and saves
     format    - resets filesystem
     clear     - clears terminal
-    reeboot   - reboots system
+    reboot    -reboots system
+    install   -helps install pip packadges
+    uninstall -helps uninstall pip packages
     """)
 
 def format_command():
@@ -655,7 +709,9 @@ command_functions = {
     'copy': copy_command,
     'rem': rem_command,
     'move': move_command,
-    'edit': edit_command
+    'edit': edit_command,
+    'install': install_command,
+    'uninstall': uninstall_command,
 }
 
 no_args_command_functions = {
