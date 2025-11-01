@@ -11,7 +11,7 @@ except FileNotFoundError:
 
 setup(
     name="Py-DOS-B1",
-    version="1.1.4",
+    version="1.1.5",
     author="Basanta Bhandari",
     author_email="bhandari.basanta.47@gmail.com",
     description="An MS-DOS-like CLI OS made entirely in Python.",
