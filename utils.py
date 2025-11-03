@@ -14,12 +14,11 @@ import tempfile
 import psutil
 from datetime import datetime
 import threading
-
+import curses
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 SAVED_FOLDER = 'saved'
-clock_running = False
-clock_thread = None
+
 
 directory_contents = {}
 current_directory = '/'
@@ -46,27 +45,132 @@ PY_DOS = """
 \n
 """
 
-def update_time_display():
-    global clock_running
+
+
+def draw_loading_screen(stdscr):
+    curses.curs_set(0)
+    stdscr.clear()
+    h, w = stdscr.getmaxyx()
     
-    while clock_running:
-        current_time = datetime.now().strftime("%H:%M:%S")
-        sys.stdout.write(f"\033[s")
-        sys.stdout.write(f"\033[12;1H")
-        sys.stdout.write(f"Time: [{current_time}]" + " " * 20)
-        sys.stdout.write(f"\033[u")
-        sys.stdout.flush()
-        time.sleep(1)
+    logo_lines = PY_DOS.strip().split('\n')
+    start_y = h // 2 - len(logo_lines) - 2
+    
+    for i, line in enumerate(logo_lines):
+        x = w // 2 - len(line) // 2
+        stdscr.addstr(start_y + i, x, line, curses.color_pair(1))
+    
+    loading_y = start_y + len(logo_lines) + 2
+    
+    stages = ["Booting PyDOS...", "Loading system..."]
+    
+    for stage in stages:
+        x = w // 2 - len(stage) // 2
+        stdscr.addstr(loading_y, x, stage, curses.color_pair(3))
+        stdscr.refresh()
+        
+        bar_y = loading_y + 2
+        bar_width = 40
+        bar_x = w // 2 - bar_width // 2
+        
+        for i in range(bar_width + 1):
+            progress = "#" * i + ":" * (bar_width - i)
+            stdscr.addstr(bar_y, bar_x, f"[{progress}]", curses.color_pair(2))
+            stdscr.refresh()
+            time.sleep(0.05)
+        
+        time.sleep(0.3)
+        stdscr.clear()
 
-def start_clock():
-    global clock_running, clock_thread
-    clock_running = True
-    clock_thread = threading.Thread(target=update_time_display, daemon=True)
-    clock_thread.start()
+def draw_saving_screen(stdscr):
+    curses.curs_set(0)
+    stdscr.clear()
+    h, w = stdscr.getmaxyx()
+    
+    message = "Saving filesystem..."
+    y = h // 2
+    x = w // 2 - len(message) // 2
+    stdscr.addstr(y, x, message, curses.color_pair(2))
+    
+    bar_width = 40
+    bar_x = w // 2 - bar_width // 2
+    bar_y = y + 2
+    
+    for i in range(bar_width + 1):
+        progress = "#" * i + ":" * (bar_width - i)
+        stdscr.addstr(bar_y, bar_x, f"[{progress}]", curses.color_pair(2))
+        stdscr.refresh()
+        time.sleep(0.05)
 
-def stop_clock():
-    global clock_running
-    clock_running = False
+def draw_home_screen(stdscr):
+    curses.curs_set(0)
+    h, w = stdscr.getmaxyx()
+    
+    split_x = int(w * 0.8)
+    
+    logo_lines = PY_DOS.strip().split('\n')
+    logo_start_y = 2
+    
+    for i, line in enumerate(logo_lines):
+        x = split_x // 2 - len(line) // 2
+        if x > 0 and logo_start_y + i < h:
+            stdscr.addstr(logo_start_y + i, x, line, curses.color_pair(1))
+    
+    info_y = logo_start_y + len(logo_lines) + 2
+    stdscr.addstr(info_y, 2, "PY DOS [Version Beta]", curses.color_pair(2))
+    stdscr.addstr(info_y + 1, 2, "ENTER 'help' TO GET STARTED.", curses.color_pair(2))
+    stdscr.addstr(info_y + 3, 2, "Filesystem loaded from previous session.", curses.color_pair(2))
+    
+    sidebar_x = split_x + 2
+    sidebar_y = 2
+    
+    battery = psutil.sensors_battery()
+    if battery:
+        percent = int(battery.percent)
+        filled = int(percent / 5)
+        empty = 20 - filled
+        bar = "#" * filled + ":" * empty
+        icon = "⚡" if battery.power_plugged else "🔋"
+        
+        stdscr.addstr(sidebar_y, sidebar_x, "BATTERY", curses.color_pair(3))
+        stdscr.addstr(sidebar_y + 1, sidebar_x, f"[{bar}]", curses.color_pair(2))
+        stdscr.addstr(sidebar_y + 2, sidebar_x, f"{percent}% {icon}", curses.color_pair(2))
+    
+    current_time = datetime.now().strftime("%H:%M:%S")
+    stdscr.addstr(sidebar_y + 4, sidebar_x, "TIME", curses.color_pair(3))
+    stdscr.addstr(sidebar_y + 5, sidebar_x, current_time, curses.color_pair(2))
+    
+    stdscr.addstr(sidebar_y + 7, sidebar_x, "DIRECTORY", curses.color_pair(3))
+    stdscr.addstr(sidebar_y + 8, sidebar_x, current_directory, curses.color_pair(2))
+    
+    file_count = sum(1 for item in kernel.get(current_directory, {}).get('contents', {}).values() if item['type'] == 'file')
+    dir_count = sum(1 for item in kernel.get(current_directory, {}).get('contents', {}).values() if item['type'] == 'directory')
+    
+    stdscr.addstr(sidebar_y + 10, sidebar_x, "FILES", curses.color_pair(3))
+    stdscr.addstr(sidebar_y + 11, sidebar_x, f"{file_count} files", curses.color_pair(2))
+    stdscr.addstr(sidebar_y + 12, sidebar_x, f"{dir_count} dirs", curses.color_pair(2))
+    
+    for y in range(1, h - 1):
+        stdscr.addch(y, split_x, '│', curses.color_pair(1))
+    
+    stdscr.refresh()
+
+def display_home_curses():
+    def main(stdscr):
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
+        
+        draw_loading_screen(stdscr)
+        draw_home_screen(stdscr)
+        
+        stdscr.getch()
+    
+    curses.wrapper(main)
+
+def display_home():
+    display_home_curses()
 
     
 def clear_terminal():
@@ -79,8 +183,8 @@ def display_home():
     print("ENTER 'help' TO GET STARTED.")
     print("="*32)
     get_battery_status()
-    update_time_display()
-    start_clock()
+    
+
     
 
 def get_current_path():
@@ -338,7 +442,7 @@ def mktf_command(args):
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
         temp_path = f.name
     
-    stop_clock()
+  
     
     print("\nCreating text file...")
     print("Press 'i' to start typing | 'Esc' to stop | ':wq' to save and exit | ':q!' to exit without saving")
@@ -349,7 +453,7 @@ def mktf_command(args):
     else:
         os.system(f"nvim {temp_path}")
     
-    start_clock()
+ 
     
     with open(temp_path, 'r') as f:
         content = f.read()
@@ -380,7 +484,8 @@ def mkef_command(args):
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
         temp_path = f.name
     
-    stop_clock()
+
+
     
     print("\nCreating executable file...")
     print("Press 'i' to start typing | 'Esc' to stop | ':wq' to save and exit | ':q!' to exit without saving")
@@ -391,7 +496,7 @@ def mkef_command(args):
     else:
         os.system(f"nvim {temp_path}")
     
-    start_clock()
+ 
     
     with open(temp_path, 'r') as f:
         content = f.read()
@@ -520,7 +625,7 @@ def edit_command(args):
         f.write(directory_contents[file_path]['content'])
         temp_path = f.name
     
-    stop_clock()
+    
     
     print("\nOpening editor...")
     print("Press 'i' to start typing | 'Esc' to stop | ':wq' to save and exit | ':q!' to exit without saving")
@@ -530,8 +635,7 @@ def edit_command(args):
         os.system(f"notepad {temp_path}")
     else:
         os.system(f"nvim {temp_path}")
-    
-    start_clock()
+ 
     
     with open(temp_path, 'r') as f:
         directory_contents[file_path]['content'] = f.read()
@@ -669,19 +773,22 @@ def format_command():
         print(f"Error formatting: {e}")
 
 def clear_command():
-    stop_clock()
     clear_terminal()
     display_home()
     
 
 def quit_command():
-    stop_clock()
+    def save_and_quit(stdscr):
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        draw_saving_screen(stdscr)
+    
+    curses.wrapper(save_and_quit)
     save_filesystem()
-    print("Filesystem saved. Goodbye!")
     sys.exit()
 
 def reboot_command():
-    stop_clock()
     save_filesystem()
     print("Rebooting...")
     time.sleep(1)

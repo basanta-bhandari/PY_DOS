@@ -14,12 +14,30 @@
         "tmp": {
           "type": "directory",
           "contents": {}
+        },
+        "main.py": {
+          "type": "file"
+        },
+        "comp_bot.py": {
+          "type": "file"
+        },
+        "utils.py": {
+          "type": "file"
         }
       }
     }
   },
   "current_directory": "/",
   "command_history": [
+    "rem test.py main.py",
+    "rem test.py to main.py",
+    "ls",
+    "mkef comp_bot.py",
+    "mkef utils.py",
+    "ls",
+    "run main.py",
+    "edit main.py",
+    "run main.py",
     "quit"
   ]
 }
