@@ -1,0 +1,13 @@
+
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.svg
+*.webp
+*.ico
+*.json
+/packaging_env
+/__pycache__
+/dist

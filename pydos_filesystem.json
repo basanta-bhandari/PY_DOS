@@ -15,29 +15,32 @@
           "type": "directory",
           "contents": {}
         },
-        "main.py": {
-          "type": "file"
-        },
-        "comp_bot.py": {
-          "type": "file"
-        },
-        "utils.py": {
+        "test": {
+          "type": "directory",
+          "contents": {}
+        }
+      }
+    },
+    "/test": {
+      "type": "directory",
+      "contents": {
+        "hems.py": {
           "type": "file"
         }
       }
     }
   },
-  "current_directory": "/",
+  "current_directory": "/test",
   "command_history": [
-    "rem test.py main.py",
-    "rem test.py to main.py",
-    "ls",
-    "mkef comp_bot.py",
-    "mkef utils.py",
-    "ls",
-    "run main.py",
-    "edit main.py",
-    "run main.py",
+    "run test.py",
+    "mktf test.py",
+    "vwtf test.py",
+    "run test.py",
+    "rem test.py to hems.py",
+    "dir",
+    "edit test.py",
+    "edit hems.py",
+    "vwtf hems.py",
     "quit"
   ]
 }
