@@ -1,13 +1,5 @@
-
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.svg
-*.webp
-*.ico
-*.json
-/packaging_env
+pydos_file_contents.json
+/venv
 /__pycache__
 /dist
+/saved

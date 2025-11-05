@@ -14,33 +14,12 @@
         "tmp": {
           "type": "directory",
           "contents": {}
-        },
-        "test": {
-          "type": "directory",
-          "contents": {}
-        }
-      }
-    },
-    "/test": {
-      "type": "directory",
-      "contents": {
-        "hems.py": {
-          "type": "file"
         }
       }
     }
   },
-  "current_directory": "/test",
+  "current_directory": "/",
   "command_history": [
-    "run test.py",
-    "mktf test.py",
-    "vwtf test.py",
-    "run test.py",
-    "rem test.py to hems.py",
-    "dir",
-    "edit test.py",
-    "edit hems.py",
-    "vwtf hems.py",
     "quit"
   ]
 }
