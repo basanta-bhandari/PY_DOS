@@ -20,6 +20,8 @@
   },
   "current_directory": "/",
   "command_history": [
+    "quit",
+    "reboot",
     "quit"
   ]
 }
