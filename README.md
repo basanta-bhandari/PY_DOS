@@ -16,6 +16,7 @@ A work-in-progress DOS simulator for the terminal. This is an early version that
 ### Prerequisites
 - Python 3.7 or higher (check with `python3 --version` or `python --version`)
 - pip (comes with Python) or pipx
+- required modules(in requirements.txt)
 
 ### Installing pipx (recommended method)
 
