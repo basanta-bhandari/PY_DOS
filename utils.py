@@ -724,26 +724,38 @@ def run_command(args):
 
 def help_command(args=None):
     print("""
-    AVAILABLE COMMANDS:
-    cd        - changes directory
-    mkdir     - creates a directory
-    rmdir     - removes a directory
-    ls        - lists directory contents
-    mktf      - creates text files
-    mkef      - creates executable files
-    rm        - removes files
-    run       - runs executable files
-    vwtf      - shows file contents
-    copy      - copies files to another directory
-    move      - moves files to another directory
-    rem       - renames files
-    edit      - edits existing files
-    quit      - exits and saves
-    format    - resets filesystem
-    clear     - clears terminal
-    reboot    -reboots system
-    install   -helps install pip packadges
-    uninstall -helps uninstall pip packages
+    =================================================
+    [AVAILABLE COMMANDS:                            ]
+    |  ---------- directory management -------------|
+    |cd        - changes directory                  |
+    |mkdir     - creates a directory                |
+    |rmdir     - removes a directory                |
+    |ls        - lists directory contents           |
+    |  --------- file management -------------------|
+    |mktf      - creates text files                 |
+    |mkef      - creates executable files           |
+    |rm        - removes files                      |
+    |run       - runs executable files              |
+    |vwtf      - shows file contents                |
+    |copy      - copies files to another directory  |
+    |move      - moves files to another directory   |
+    |rem       - renames files                      |
+    |edit      - edits existing files               |
+    |   --------- ystem commands -------------------|
+    |quit      - exits and saves                    |
+    |format    - resets filesystem                  |
+    |clear     - clears terminal                    |
+    |reboot    -reboots system                      |
+    |  ---------- package manager ------------------|
+    |install   -helps install pip packadges         |
+    |uninstall -helps uninstall pip packages        |
+    |  ---------- web based commands ---------------|
+    |web <url>           - opens URL in browser     |
+    |web google.com      - browse site              |
+    |web search <query>  - quick Google search      |
+    |bookmark <name>     - save current page        |
+    |bookmarks           - list saved bookmarks     |
+    =================================================
     """)
 
 def format_command():
