@@ -65,6 +65,18 @@ On some systems you may need to use `pip3`:
 ```bash
 pip3 install Py-DOS-B1
 ```
+**Method : Running locally**
+```bash
+git clone https://github.com/basanta-bhandari/PY_DOS
+```
+on some systems a virtual environment is required
+```bash
+python -m venv <venv_name>
+```
+installing required modules on virtual enviornment(present in requirements.txt)
+```bash
+pip install <module_name(s)>
+```
 
 ### Running PyDOS
 ```bash
