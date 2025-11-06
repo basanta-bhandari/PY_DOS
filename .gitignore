@@ -3,3 +3,4 @@ pydos_file_contents.json
 /__pycache__
 /dist
 /saved
+*.png
