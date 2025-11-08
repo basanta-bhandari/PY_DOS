@@ -4,5 +4,8 @@ pydos_file_contents.json
 /dist
 /saved
 *.png
+*.json
 Done
 pydos_filesystem.json
+pomodoro.py
+MANIFEST.in
