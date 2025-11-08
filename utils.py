@@ -29,6 +29,7 @@ kernel = {
             'bin': {'type': 'directory', 'contents': {}},
             'usr': {'type': 'directory', 'contents': {}},
             'tmp': {'type': 'directory', 'contents': {}},
+            'Apps':{'type': 'directory', 'contents': {}}, 
         }
     }
 }
