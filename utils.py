@@ -54,41 +54,23 @@ PY_DOS = """
 \n
 """
 
+def clear_terminal():
+    os.system('cls' if sys.platform.startswith('win') else 'clear')
 
-
-def draw_loading_screen(stdscr):
-    curses.curs_set(0)
-    stdscr.clear()
-    h, w = stdscr.getmaxyx()
+def display_loading_screen():
+    clear_terminal()
+    print(PY_DOS)
+    print("\nLoading filesystem...")
     
-    logo_lines = PY_DOS.strip().split('\n')
-    start_y = h // 2 - len(logo_lines) - 2
+    bar_width = 40
+    for i in range(bar_width + 1):
+        progress = "#" * i + ":" * (bar_width - i)
+        print(f"\r[{progress}]", end="", flush=True)
+        time.sleep(0.05)
     
-    for i, line in enumerate(logo_lines):
-        x = w // 2 - len(line) // 2
-        stdscr.addstr(start_y + i, x, line, curses.color_pair(1))
-    
-    loading_y = start_y + len(logo_lines) + 2
-    
-    stages = ["Booting PyDOS...", "Loading system..."]
-    
-    for stage in stages:
-        x = w // 2 - len(stage) // 2
-        stdscr.addstr(loading_y, x, stage, curses.color_pair(3))
-        stdscr.refresh()
-        
-        bar_y = loading_y + 2
-        bar_width = 40
-        bar_x = w // 2 - bar_width // 2
-        
-        for i in range(bar_width + 1):
-            progress = "#" * i + ":" * (bar_width - i)
-            stdscr.addstr(bar_y, bar_x, f"[{progress}]", curses.color_pair(2))
-            stdscr.refresh()
-            time.sleep(0.05)
-        
-        time.sleep(0.3)
-        stdscr.clear()
+    print("\n")
+    load_filesystem()
+    time.sleep(0.5)
 
 def draw_saving_screen(stdscr):
     curses.curs_set(0)
@@ -163,35 +145,14 @@ def draw_home_screen(stdscr):
     
     stdscr.refresh()
 
-def display_home_curses():
-    def main(stdscr):
-        curses.start_color()
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
-        
-        draw_loading_screen(stdscr)
-        draw_home_screen(stdscr)
-        
-        stdscr.getch()
-    
-    curses.wrapper(main)
-
-def display_home():
-    display_home_curses()
-
-    
-def clear_terminal():
-    os.system('cls' if sys.platform.startswith('win') else 'clear')
-
 def display_home():
     clear_terminal()
     print(PY_DOS)
-    print("PY DOS [Version Alpha]")
+    print("PY DOS [Version Beta]")
     print("ENTER 'help' TO GET STARTED.")
-    print("="*32)
+    print("="*50)
     get_battery_status()
+    print()
 
     
 
@@ -340,11 +301,37 @@ def cd_command(args):
         print(current_directory)
         return
     
-    target_path = normalize_path(args)
-    if target_path in kernel and kernel[target_path]['type'] == 'directory':
-        current_directory = target_path
+    if args == '..':
+        if current_directory == '/':
+            return
+        parts = current_directory.rstrip('/').split('/')
+        current_directory = '/'.join(parts[:-1]) or '/'
+        return
+    
+    if args == '/':
+        current_directory = '/'
+        return
+    
+    if args.startswith('/'):
+        target_path = args
     else:
-        print("Directory not founda.")
+        target_path = current_directory.rstrip('/') + '/' + args if current_directory != '/' else '/' + args
+    
+    target_path = target_path.rstrip('/')
+    if target_path == '':
+        target_path = '/'
+    
+    parts = target_path.strip('/').split('/') if target_path != '/' else []
+    current_node = kernel['/']
+    
+    for part in parts:
+        if 'contents' in current_node and part in current_node['contents'] and current_node['contents'][part]['type'] == 'directory':
+            current_node = current_node['contents'][part]
+        else:
+            print(f"Directory not found: {args}")
+            return
+    
+    current_directory = target_path
 
 def mkdir_command(args):
     if not args:
@@ -360,7 +347,7 @@ def mkdir_command(args):
     
     parent_path = '/'.join(new_path.split('/')[:-1]) or '/'
     if parent_path not in kernel:
-        print("Parent directory not found")
+        print("Parent directory not found.")
         return
     
     dir_name_only = new_path.split('/')[-1]
