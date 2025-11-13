@@ -7,5 +7,5 @@ pydos_file_contents.json
 *.json
 Done
 pydos_filesystem.json
-pomodoro.py
+# pomodoro.py
 MANIFEST.in

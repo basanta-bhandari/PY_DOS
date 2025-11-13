@@ -29,11 +29,19 @@ kernel = {
             'bin': {'type': 'directory', 'contents': {}},
             'usr': {'type': 'directory', 'contents': {}},
             'tmp': {'type': 'directory', 'contents': {}},
-            'Apps':{'type': 'directory', 'contents': {}}, 
+            'Apps': {
+                'type': 'directory',
+                'contents': {
+                    'Productivity': {'type': 'directory', 'contents': {
+                        'Pomodoro': {'type': 'directory', 'contents': {}}
+                    }},
+                    'Games': {'type': 'directory', 'contents': {}},
+                    'Utilities': {'type': 'directory', 'contents': {}}
+                }
+            }
         }
     }
 }
-
 PY_DOS = """
 \n
 \n
@@ -130,7 +138,7 @@ def draw_home_screen(stdscr):
         filled = int(percent / 5)
         empty = 20 - filled
         bar = "#" * filled + ":" * empty
-        icon = "⚡" if battery.power_plugged else "🔋"
+        icon = "⚡" if battery.power_plugged else ""
         
         stdscr.addstr(sidebar_y, sidebar_x, "BATTERY", curses.color_pair(3))
         stdscr.addstr(sidebar_y + 1, sidebar_x, f"[{bar}]", curses.color_pair(2))
@@ -184,7 +192,6 @@ def display_home():
     print("ENTER 'help' TO GET STARTED.")
     print("="*32)
     get_battery_status()
-    
 
     
 
@@ -337,7 +344,7 @@ def cd_command(args):
     if target_path in kernel and kernel[target_path]['type'] == 'directory':
         current_directory = target_path
     else:
-        print("Directory not found.")
+        print("Directory not founda.")
 
 def mkdir_command(args):
     if not args:
