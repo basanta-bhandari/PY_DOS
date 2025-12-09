@@ -53,14 +53,41 @@ PY_DOS = """
 \n
 """
 
+
+def update_time_display():
+    global clock_running
+    
+    while clock_running:
+        current_time = datetime.now().strftime("%H:%M:%S")
+        sys.stdout.write(f"\033[s")
+        sys.stdout.write(f"\033[4;1H")
+        sys.stdout.write(f"Time: [{current_time}]" + " " * 20)
+        sys.stdout.write(f"\033[u")
+        sys.stdout.flush()
+        time.sleep(1)
+
+def start_clock():
+    global clock_running, clock_thread
+    clock_running = True
+    clock_thread = threading.Thread(target=update_time_display, daemon=True)
+    clock_thread.start()
+
+def stop_clock():
+    global clock_running
+    clock_running = False
+
+    
 def clear_terminal():
     os.system('cls' if sys.platform.startswith('win') else 'clear')
+
+
 
 def display_loading_screen():
     clear_terminal()
     print(PY_DOS)
     print("\nLoading filesystem...")
-    
+    print("="*32)
+    clear_terminal()
     bar_width = 40
     for i in range(bar_width + 1):   
         progress = "#" * i + ":" * (bar_width - i)
@@ -76,11 +103,13 @@ def display_home():
     print(PY_DOS)
     print("PY DOS [Version Beta]")
     print("ENTER 'help' TO GET STARTED.")
-    print("="*50)
+    get_battery_status()
+    update_time_display()
+    start_clock()
     get_battery_status()
     current_time = datetime.now().strftime("%H:%M:%S")
     print(f"Time: {current_time}")
-    print()
+    
 
 def get_current_path():
     return current_directory.replace('/', '\\') if current_directory != '/' else '\\'

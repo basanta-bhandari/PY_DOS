@@ -3,6 +3,7 @@ from utils import *
 def main():
     display_loading_screen()
     setup_readline()
+    display_home()
     
     while True:
         try:

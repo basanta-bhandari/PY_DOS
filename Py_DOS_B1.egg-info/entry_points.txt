@@ -1,0 +1,3 @@
+[console_scripts]
+boot = main:main
+pydos = main:main
