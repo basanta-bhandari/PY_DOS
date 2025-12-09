@@ -14,7 +14,6 @@ import tempfile
 import psutil
 from datetime import datetime
 import threading
-import curses
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 SAVED_FOLDER = 'saved'
@@ -63,7 +62,7 @@ def display_loading_screen():
     print("\nLoading filesystem...")
     
     bar_width = 40
-    for i in range(bar_width + 1):
+    for i in range(bar_width + 1):   
         progress = "#" * i + ":" * (bar_width - i)
         print(f"\r[{progress}]", end="", flush=True)
         time.sleep(0.05)
@@ -72,79 +71,6 @@ def display_loading_screen():
     load_filesystem()
     time.sleep(0.5)
 
-def draw_saving_screen(stdscr):
-    curses.curs_set(0)
-    stdscr.clear()
-    h, w = stdscr.getmaxyx()
-    
-    message = "Saving filesystem..."
-    y = h // 2
-    x = w // 2 - len(message) // 2
-    stdscr.addstr(y, x, message, curses.color_pair(2))
-    
-    bar_width = 40
-    bar_x = w // 2 - bar_width // 2
-    bar_y = y + 2
-    
-    for i in range(bar_width + 1):
-        progress = "#" * i + ":" * (bar_width - i)
-        stdscr.addstr(bar_y, bar_x, f"[{progress}]", curses.color_pair(2))
-        stdscr.refresh()
-        time.sleep(0.05)
-
-def draw_home_screen(stdscr):
-    curses.curs_set(0)
-    h, w = stdscr.getmaxyx()
-    
-    split_x = int(w * 0.8)
-    
-    logo_lines = PY_DOS.strip().split('\n')
-    logo_start_y = 2
-    
-    for i, line in enumerate(logo_lines):
-        x = split_x // 2 - len(line) // 2
-        if x > 0 and logo_start_y + i < h:
-            stdscr.addstr(logo_start_y + i, x, line, curses.color_pair(1))
-    
-    info_y = logo_start_y + len(logo_lines) + 2
-    stdscr.addstr(info_y, 2, "PY DOS [Version Beta]", curses.color_pair(2))
-    stdscr.addstr(info_y + 1, 2, "ENTER 'help' TO GET STARTED.", curses.color_pair(2))
-    stdscr.addstr(info_y + 3, 2, "Filesystem loaded from previous session.", curses.color_pair(2))
-    
-    sidebar_x = split_x + 2
-    sidebar_y = 2
-    
-    battery = psutil.sensors_battery()
-    if battery:
-        percent = int(battery.percent)
-        filled = int(percent / 5)
-        empty = 20 - filled
-        bar = "#" * filled + ":" * empty
-        icon = "⚡" if battery.power_plugged else ""
-        
-        stdscr.addstr(sidebar_y, sidebar_x, "BATTERY", curses.color_pair(3))
-        stdscr.addstr(sidebar_y + 1, sidebar_x, f"[{bar}]", curses.color_pair(2))
-        stdscr.addstr(sidebar_y + 2, sidebar_x, f"{percent}% {icon}", curses.color_pair(2))
-    
-    current_time = datetime.now().strftime("%H:%M:%S")
-    stdscr.addstr(sidebar_y + 4, sidebar_x, "TIME", curses.color_pair(3))
-    stdscr.addstr(sidebar_y + 5, sidebar_x, current_time, curses.color_pair(2))
-    
-    stdscr.addstr(sidebar_y + 7, sidebar_x, "DIRECTORY", curses.color_pair(3))
-    stdscr.addstr(sidebar_y + 8, sidebar_x, current_directory, curses.color_pair(2))
-    
-    file_count = sum(1 for item in kernel.get(current_directory, {}).get('contents', {}).values() if item['type'] == 'file')
-    dir_count = sum(1 for item in kernel.get(current_directory, {}).get('contents', {}).values() if item['type'] == 'directory')
-    
-    stdscr.addstr(sidebar_y + 10, sidebar_x, "FILES", curses.color_pair(3))
-    stdscr.addstr(sidebar_y + 11, sidebar_x, f"{file_count} files", curses.color_pair(2))
-    stdscr.addstr(sidebar_y + 12, sidebar_x, f"{dir_count} dirs", curses.color_pair(2))
-    
-    for y in range(1, h - 1):
-        stdscr.addch(y, split_x, '│', curses.color_pair(1))
-    
-    stdscr.refresh()
-
 def display_home():
     clear_terminal()
     print(PY_DOS)
@@ -152,9 +78,9 @@ def display_home():
     print("ENTER 'help' TO GET STARTED.")
     print("="*50)
     get_battery_status()
+    current_time = datetime.now().strftime("%H:%M:%S")
+    print(f"Time: {current_time}")
     print()
-
-    
 
 def get_current_path():
     return current_directory.replace('/', '\\') if current_directory != '/' else '\\'
@@ -270,6 +196,36 @@ def get_battery_status():
     print(f"Battery: [{bar}] {percent}% {icon}")
     print(f"Time Left: {time_str}")
 
+def get_cpu_stats():
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    cpu_count = psutil.cpu_count()
+    return cpu_percent, cpu_count
+
+def get_memory_stats():
+    memory = psutil.virtual_memory()
+    return memory.percent, memory.used, memory.total
+
+def get_disk_stats():
+    disk = psutil.disk_usage('/')
+    return disk.percent, disk.used, disk.total
+
+def get_gpu_stats():
+    try:
+        import GPUtil
+        gpus = GPUtil.getGPUs()
+        if gpus:
+            return [(gpu.name, gpu.load * 100, gpu.memoryUsed, gpu.memoryTotal) for gpu in gpus]
+    except:
+        pass
+    return None
+
+def format_bytes(bytes_val):
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if bytes_val < 1024.0:
+            return f"{bytes_val:.1f}{unit}"
+        bytes_val /= 1024.0
+    return f"{bytes_val:.1f}PB"
+
         
 def install_command(args):
     if not args:
@@ -332,6 +288,7 @@ def cd_command(args):
             return
     
     current_directory = target_path
+    save_filesystem()
 
 def mkdir_command(args):
     if not args:
@@ -346,13 +303,22 @@ def mkdir_command(args):
         return
     
     parent_path = '/'.join(new_path.split('/')[:-1]) or '/'
-    if parent_path not in kernel:
-        print("Parent directory not found.")
-        return
+    
+    if parent_path == '/':
+        parent_node = kernel['/']
+    else:
+        parts = parent_path.strip('/').split('/')
+        parent_node = kernel['/']
+        for part in parts:
+            if 'contents' in parent_node and part in parent_node['contents']:
+                parent_node = parent_node['contents'][part]
+            else:
+                print("Parent directory not found.")
+                return
     
     dir_name_only = new_path.split('/')[-1]
     kernel[new_path] = {'type': 'directory', 'contents': {}}
-    kernel[parent_path]['contents'][dir_name_only] = {'type': 'directory', 'contents': {}}
+    parent_node['contents'][dir_name_only] = {'type': 'directory', 'contents': {}}
     save_filesystem()
     print(f"Directory '{dirname}' created")
 
@@ -381,11 +347,23 @@ def rmdir_command(args):
     save_filesystem()
 
 def ls_command():
-    if current_directory not in kernel:
-        print("Current directory not found.")
+    if current_directory == '/':
+        current_node = kernel['/']
+    else:
+        parts = current_directory.strip('/').split('/')
+        current_node = kernel['/']
+        for part in parts:
+            if 'contents' in current_node and part in current_node['contents']:
+                current_node = current_node['contents'][part]
+            else:
+                print("Current directory not found.")
+                return
+    
+    if 'contents' not in current_node:
+        print("Directory is empty")
         return
     
-    contents = kernel[current_directory]['contents']
+    contents = current_node['contents']
     if not contents:
         print("Directory is empty")
     else:
@@ -719,6 +697,7 @@ def run_command(args):
 
 def help_command(args=None):
     print("""
+
     =================================================
     [AVAILABLE COMMANDS:                            ]
     |  ---------- directory management -------------|
@@ -736,21 +715,19 @@ def help_command(args=None):
     |move      - moves files to another directory   |
     |rem       - renames files                      |
     |edit      - edits existing files               |
-    |   --------- ystem commands -------------------|
+    |   --------- system commands ------------------|
     |quit      - exits and saves                    |
+    |sysinfo   - detailed system information        |
     |format    - resets filesystem                  |
     |clear     - clears terminal                    |
-    |reboot    -reboots system                      |
+    |reboot    - reboots system                     |
     |  ---------- package manager ------------------|
     |install   -helps install pip packadges         |
     |uninstall -helps uninstall pip packages        |
     |  ---------- web based commands ---------------|
-    |web <url>           - opens URL in browser     |
-    |web google.com      - browse site              |
-    |web search <query>  - quick Google search      |
-    |bookmark <name>     - save current page        |
-    |bookmarks           - list saved bookmarks     |
+    |                                               |
     =================================================
+
     """)
 
 def format_command():
@@ -782,16 +759,80 @@ def format_command():
 def clear_command():
     clear_terminal()
     display_home()
+
+def sysinfo_command():
+    clear_terminal()
+    print(PY_DOS)
+    print("\n" + "="*70)
+    print("SYSTEM INFORMATION".center(70))
+    print("="*70 + "\n")
     
+    print(f"Platform:          {platform.system()} {platform.release()}")
+    print(f"Architecture:      {platform.machine()}")
+    print(f"Processor:         {platform.processor()}")
+    print(f"Python Version:    {sys.version.split()[0]}\n")
+    
+    print("-" * 70)
+    print("HARDWARE RESOURCES")
+    print("-" * 70 + "\n")
+    
+    cpu_percent, cpu_count = get_cpu_stats()
+    print(f"CPU Cores:         {cpu_count}")
+    print(f"CPU Usage:         {cpu_percent}%")
+    
+    mem_percent, mem_used, mem_total = get_memory_stats()
+    print(f"\nMemory Usage:      {mem_percent}%")
+    print(f"  Used:            {format_bytes(mem_used)}")
+    print(f"  Total:           {format_bytes(mem_total)}")
+    print(f"  Available:       {format_bytes(psutil.virtual_memory().available)}")
+    
+    disk_percent, disk_used, disk_total = get_disk_stats()
+    print(f"\nDisk Usage:        {disk_percent}%")
+    print(f"  Used:            {format_bytes(disk_used)}")
+    print(f"  Total:           {format_bytes(disk_total)}")
+    print(f"  Free:            {format_bytes(psutil.disk_usage('/').free)}")
+    
+    gpu_stats = get_gpu_stats()
+    if gpu_stats:
+        print(f"\nGPU Devices:       {len(gpu_stats)}")
+        for idx, (name, gpu_load, gpu_mem_used, gpu_mem_total) in enumerate(gpu_stats):
+            print(f"\n  GPU {idx}: {name}")
+            print(f"    Load:         {gpu_load:.1f}%")
+            print(f"    Memory Used:  {gpu_mem_used:.0f}MB / {gpu_mem_total:.0f}MB")
+    else:
+        print("\nGPU:               No GPU detected or GPUtil not installed")
+    
+    battery = psutil.sensors_battery()
+    if battery:
+        print(f"\nBattery:           {battery.percent}%")
+        print(f"  Status:          {'Charging' if battery.power_plugged else 'Discharging'}")
+        if battery.secsleft != psutil.POWER_TIME_UNKNOWN and battery.secsleft != psutil.POWER_TIME_UNLIMITED:
+            hours, remainder = divmod(battery.secsleft, 3600)
+            minutes = remainder // 60
+            print(f"  Time Remaining:  {hours}h {minutes}m")
+    
+    print("\n" + "-" * 70)
+    print("FILESYSTEM")
+    print("-" * 70 + "\n")
+    print(f"Current Directory: {current_directory}")
+    
+    contents = kernel.get(current_directory, {}).get('contents', {})
+    file_count = sum(1 for item in contents.values() if item['type'] == 'file')
+    dir_count = sum(1 for item in contents.values() if item['type'] == 'directory')
+    
+    print(f"Files:             {file_count}")
+    print(f"Directories:       {dir_count}")
+    
+    print("\n" + "="*70)
 
 def quit_command():
-    def save_and_quit(stdscr):
-        curses.start_color()
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        draw_saving_screen(stdscr)
-    
-    curses.wrapper(save_and_quit)
+    print("\nSaving filesystem...")
+    bar_width = 40
+    for i in range(bar_width + 1):
+        progress = "#" * i + ":" * (bar_width - i)
+        print(f"\r[{progress}]", end="", flush=True)
+        time.sleep(0.05)
+    print("\n")
     save_filesystem()
     sys.exit()
 
@@ -834,6 +875,7 @@ no_args_command_functions = {
     'help': help_command,
     'clear': clear_command, 
     'cls': clear_command,
+    'sysinfo': sysinfo_command,
     'quit': quit_command,
     'format': format_command,
     'reboot': reboot_command,
