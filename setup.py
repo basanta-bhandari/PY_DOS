@@ -1,13 +1,10 @@
-from setuptools import setup, find_packages
-import os
+from setuptools import setup
 
-
-long_description = "An MS-DOS-like CLI OS made entirely in Python."
 try:
     with open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 except FileNotFoundError:
-    pass
+    long_description = "An MS-DOS-like CLI OS made entirely in Python."
 
 setup(
     name="Py-DOS-B1",
@@ -17,23 +14,19 @@ setup(
     description="An MS-DOS-like CLI OS made entirely in Python.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/Py-DOS-B1", 
-    
+    url="https://github.com/basanta-bhandari/PY_DOS",  # fixed: was placeholder "your-username"
 
-    packages=find_packages(),
-    py_modules=["main", "utils"],
-    
+    py_modules=["main", "utils"],  # both modules exist and are used
 
     entry_points={
         "console_scripts": [
             "boot=main:main",
-            "pydos=main:main",  
+            "pydos=main:main",
         ],
     },
-    
-    
-    scripts=["scripts/boot.py"] if os.path.exists("scripts/boot.py") else [],
-    
+
+    # removed: scripts=["scripts/boot.py"] — scripts/ directory does not exist
+
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: End Users/Desktop",
@@ -49,19 +42,16 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    
+
     python_requires=">=3.7",
     install_requires=["psutil", "readchar"],
-    
 
     include_package_data=True,
     package_data={
         "": ["*.md", "*.txt", "*.json"],
     },
-    
 
     keywords="dos, cli, terminal, simulator, shell",
-    
 
     project_urls={
         "Bug Reports": "https://github.com/basanta-bhandari/Py-DOS-B1/issues",

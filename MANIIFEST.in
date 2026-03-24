@@ -1,7 +1,0 @@
-include README.md
-include *.py
-include *.json
-recursive-include scripts *.py
-global-exclude *.pyc
-global-exclude __pycache__
-global-exclude .git*

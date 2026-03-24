@@ -31,9 +31,6 @@ kernel = {
             'Apps': {
                 'type': 'directory',
                 'contents': {
-                    'Productivity': {'type': 'directory', 'contents': {
-                        'Pomodoro': {'type': 'directory', 'contents': {}}
-                    }},
                     'Games': {'type': 'directory', 'contents': {}},
                     'Utilities': {'type': 'directory', 'contents': {}}
                 }
@@ -104,11 +101,9 @@ def display_home():
     print("PY DOS [Version Beta]")
     print("ENTER 'help' TO GET STARTED.")
     get_battery_status()
-    update_time_display()
-    start_clock()
-    get_battery_status()
     current_time = datetime.now().strftime("%H:%M:%S")
     print(f"Time: {current_time}")
+    start_clock()
     
 
 def get_current_path():
@@ -751,10 +746,8 @@ def help_command(args=None):
     |clear     - clears terminal                    |
     |reboot    - reboots system                     |
     |  ---------- package manager ------------------|
-    |install   -helps install pip packadges         |
-    |uninstall -helps uninstall pip packages        |
-    |  ---------- web based commands ---------------|
-    |                                               |
+    |install   - installs pip packages              |
+    |uninstall - uninstalls pip packages            |
     =================================================
 
     """)
