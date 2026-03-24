@@ -972,3 +972,5 @@ def process_commands():
         no_args_command_functions[command]()
     else:
         print(f"'{command}' is not recognized as an internal or external command")
+
+        
