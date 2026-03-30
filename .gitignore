@@ -7,5 +7,5 @@ pydos_file_contents.json
 *.json
 Done
 pydos_filesystem.json
-# pomodoro.py
 MANIFEST.in
+Py_DOS_B1.egg-info

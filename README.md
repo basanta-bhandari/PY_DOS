@@ -21,8 +21,8 @@ A DOS-style terminal simulator built entirely in Python. Implements a virtual fi
 - Command history (last 10 commands) saved and restored between sessions
 
 ## To be added:
-- Web browsing features( with a network connectivity interface)
-- lock screen/security
+- Web browsing features( with a network connectivity interface)---------------
+- |lock screen/security| ------------------------------------------------------Done
 - manipulation/veiwing of actual device settings (storage, CPU/GPU usage, etc)
 
 
