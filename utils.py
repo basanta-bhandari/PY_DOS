@@ -34,7 +34,12 @@ kernel = {
                 'type': 'directory',
                 'contents': {
                     'Games': {'type': 'directory', 'contents': {}},
-                    'Utilities': {'type': 'directory', 'contents': {}}
+                    'Utilities': {
+                    'type': 'directory',
+                    'contents': {
+                        'Lynx': {'type': 'directory', 'contents': {}}
+                    }
+                }
                 }
             }
         }
@@ -51,6 +56,104 @@ PY_DOS = """
                             ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
 \n
 """
+
+
+LYNX_DIR = '/Apps/Utilities/Lynx'
+LYNX_FILE = '/Apps/Utilities/Lynx/web'
+
+WEB_SCRIPT = '''import subprocess
+import sys
+import shutil
+import platform
+
+try:
+    url = _pydos_run_args_
+except NameError:
+    url = ""
+
+def _detect_pkg_manager():
+    managers = [
+        ("apt-get", ["sudo", "apt-get", "install", "-y", "lynx"]),
+        ("apt",     ["sudo", "apt",     "install", "-y", "lynx"]),
+        ("pacman",  ["sudo", "pacman",  "-S",      "--noconfirm", "lynx"]),
+        ("dnf",     ["sudo", "dnf",     "install", "-y", "lynx"]),
+        ("brew",    ["brew", "install", "lynx"]),
+        ("zypper",  ["sudo", "zypper",  "install", "-y", "lynx"]),
+    ]
+    for bin_name, cmd in managers:
+        if shutil.which(bin_name):
+            return cmd
+    return None
+
+def _print_manual_instructions():
+    print("\\n[Lynx] Could not install automatically. Manual instructions:")
+    print("-" * 54)
+    import platform as _p
+    s = _p.system()
+    if s == "Linux":
+        print("  Debian/Ubuntu : sudo apt install lynx")
+        print("  Arch          : sudo pacman -S lynx")
+        print("  Fedora/RHEL   : sudo dnf install lynx")
+        print("  openSUSE      : sudo zypper install lynx")
+    elif s == "Darwin":
+        print("  macOS (Homebrew): brew install lynx")
+    elif s == "Windows":
+        print("  Windows: winget install lynx")
+        print("           or: https://lynx.invisible-island.net/")
+    else:
+        print("  Visit: https://lynx.invisible-island.net/")
+    print("-" * 54)
+
+if shutil.which("lynx") is None:
+    print("[Lynx] Lynx not found. Attempting to install...")
+    install_cmd = _detect_pkg_manager()
+    if install_cmd is None:
+        print("[Lynx] No supported package manager found.")
+        _print_manual_instructions()
+    else:
+        print(f"[Lynx] Running: {chr(32).join(install_cmd)}")
+        result = subprocess.run(install_cmd)
+        if result.returncode != 0 or shutil.which("lynx") is None:
+            print("[Lynx] Automatic installation failed (permissions issue?).")
+            _print_manual_instructions()
+        else:
+            print("[Lynx] Lynx installed successfully.")
+
+if shutil.which("lynx"):
+    cmd = ["lynx"]
+    if url and url.strip():
+        target = url.strip()
+        if not target.startswith(("http://", "https://")):
+            target = "https://" + target
+        cmd.append(target)
+    subprocess.run(cmd)
+else:
+    print("[Lynx] Lynx unavailable. Cannot launch browser.")
+'''
+
+def _seed_lynx_app():
+    _ensure_lynx_kernel_path()
+    if LYNX_FILE not in directory_contents:
+        directory_contents[LYNX_FILE] = {
+            'type': 'exe',
+            'content': WEB_SCRIPT,
+            'created_in': LYNX_DIR
+        }
+    if 'web' not in kernel[LYNX_DIR].get('contents', {}):
+        kernel[LYNX_DIR]['contents']['web'] = {'type': 'file'}
+
+def _ensure_lynx_kernel_path():
+    root_contents = kernel['/']['contents']
+    if 'Apps' not in root_contents:
+        root_contents['Apps'] = {'type': 'directory', 'contents': {}}
+    apps_contents = root_contents['Apps']['contents']
+    if 'Utilities' not in apps_contents:
+        apps_contents['Utilities'] = {'type': 'directory', 'contents': {}}
+    utils_contents = apps_contents['Utilities']['contents']
+    if 'Lynx' not in utils_contents:
+        utils_contents['Lynx'] = {'type': 'directory', 'contents': {}}
+    if LYNX_DIR not in kernel:
+        kernel[LYNX_DIR] = {'type': 'directory', 'contents': {}}
 
 
 def _hash_password(raw):
@@ -364,6 +467,7 @@ def load_filesystem():
             print("State: CS [N/E]")
     except Exception as e:
         print(f"State: SS [E/E]  ----> CS")
+    _seed_lynx_app()
 
 def get_battery_status():
     battery = psutil.sensors_battery()
@@ -841,10 +945,12 @@ def create_module_from_pydos_file(module_name, file_path):
 
 def run_command(args):
     if not args:
-        print("Usage: run <filename.py>")
+        print("Usage: run <filename> [args]")
         return
     
-    file_name = args
+    parts = args.split(None, 1)
+    file_name = parts[0]
+    run_args = parts[1] if len(parts) > 1 else ''
     file_path = f"{current_directory}/{file_name}".replace('//', '/')
     
     if file_path not in directory_contents:
@@ -861,6 +967,7 @@ def run_command(args):
         '__builtins__': __builtins__,
         '__name__': '__main__',
         '__file__': file_path,
+        '_pydos_run_args_': run_args,
     }
     
     temp_dir = tempfile.mkdtemp()
@@ -922,6 +1029,10 @@ def help_command(args=None):
     |pass set  - set a boot password (max 8 chars)  |
     |pass change - change existing password         |
     |pass rm   - remove password protection         |
+    |  -------------- web browser ----------------- |
+    |web       - launch Lynx browser                |
+    |            cd Apps/Utilities/Lynx, run web    |
+    |            run web [url]  to open a URL       |
     =================================================
 
     """)
