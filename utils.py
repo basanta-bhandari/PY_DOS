@@ -8,6 +8,7 @@ import readline
 import readchar
 import atexit
 import pickle
+import hashlib
 from pathlib import Path
 import types
 import tempfile
@@ -17,6 +18,7 @@ import threading
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 SAVED_FOLDER = 'saved'
+AUTH_FILE = 'saved/pydos_auth.bin'
 
 
 directory_contents = {}
@@ -49,6 +51,173 @@ PY_DOS = """
                             ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
 \n
 """
+
+
+def _hash_password(raw):
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+def _load_auth():
+    try:
+        if os.path.exists(AUTH_FILE):
+            with open(AUTH_FILE, 'rb') as f:
+                return pickle.load(f)
+    except Exception:
+        pass
+    return None
+
+def _save_auth(data):
+    ensure_saved_folder()
+    with open(AUTH_FILE, 'wb') as f:
+        pickle.dump(data, f)
+
+def _delete_auth():
+    try:
+        if os.path.exists(AUTH_FILE):
+            os.remove(AUTH_FILE)
+    except Exception:
+        pass
+
+def _read_password_masked(prompt):
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    entered = []
+    while True:
+        ch = readchar.readchar()
+        if ch in ('\r', '\n'):
+            print()
+            break
+        elif ch in ('\x7f', '\x08'):
+            if entered:
+                entered.pop()
+                sys.stdout.write('\r' + ' ' * (len(prompt) + 8) + '\r')
+                sys.stdout.write(prompt + '*' * len(entered))
+                sys.stdout.flush()
+        elif len(entered) < 8:
+            entered.append(ch)
+            sys.stdout.write('*')
+            sys.stdout.flush()
+    return ''.join(entered)
+
+def _lockscreen_prompt(message=None):
+    clear_terminal()
+    print(PY_DOS)
+    if message:
+        print(f"{'Incorrect Password!':^80}")
+        print()
+    pad = ' ' * 30
+    sys.stdout.write(f"{pad}Password [")
+    sys.stdout.flush()
+    entered = []
+    while True:
+        ch = readchar.readchar()
+        if ch in ('\r', '\n'):
+            break
+        elif ch in ('\x7f', '\x08'):
+            if entered:
+                entered.pop()
+                display = '*' * len(entered) + '_' * (8 - len(entered))
+                sys.stdout.write('\r' + f"{pad}Password [{display}]")
+                sys.stdout.flush()
+        elif len(entered) < 8:
+            entered.append(ch)
+            display = '*' * len(entered) + '_' * (8 - len(entered))
+            sys.stdout.write('\r' + f"{pad}Password [{display}]")
+            sys.stdout.flush()
+    print()
+    return ''.join(entered)
+
+def display_lockscreen():
+    auth = _load_auth()
+    if auth is None:
+        return
+    stored_hash = auth.get('hash')
+    if not stored_hash:
+        return
+
+    first_attempt = True
+    while True:
+        raw = _lockscreen_prompt(message=None if first_attempt else True)
+        first_attempt = False
+        if _hash_password(raw) == stored_hash:
+            return
+        clear_terminal()
+        print(PY_DOS)
+        print(f"{'Incorrect Password!':^80}")
+        print()
+        pad = ' ' * 30
+        sys.stdout.write(f"{pad}Password [________]")
+        sys.stdout.flush()
+        time.sleep(1.0)
+
+def pass_command(args):
+    if not args:
+        print("Usage:")
+        print("  pass set <password>              - set a new password (max 8 chars)")
+        print("  pass change <old> <new>          - change existing password")
+        print("  pass rm                          - remove password protection")
+        return
+
+    parts = args.split()
+    sub = parts[0].lower()
+
+    if sub == 'set':
+        if len(parts) < 2:
+            print("Usage: pass set <password>")
+            return
+        raw = parts[1]
+        if len(raw) > 8:
+            print("Password cannot exceed 8 characters.")
+            return
+        if _load_auth() is not None:
+            print("A password is already set. Use 'pass change' to update it.")
+            return
+        confirm = _read_password_masked("Confirm password: ")
+        if confirm != raw:
+            print("Passwords do not match. Password not set.")
+            return
+        _save_auth({'hash': _hash_password(raw)})
+        print("Password set.")
+
+    elif sub == 'change':
+        if len(parts) < 3:
+            print("Usage: pass change <old_password> <new_password>")
+            return
+        auth = _load_auth()
+        if auth is None:
+            print("No password is set. Use 'pass set' first.")
+            return
+        old_raw, new_raw = parts[1], parts[2]
+        if _hash_password(old_raw) != auth.get('hash'):
+            print("Incorrect current password.")
+            return
+        if len(new_raw) > 8:
+            print("New password cannot exceed 8 characters.")
+            return
+        confirm = _read_password_masked("Confirm new password: ")
+        if confirm != new_raw:
+            print("Passwords do not match. Password not changed.")
+            return
+        _save_auth({'hash': _hash_password(new_raw)})
+        print("Password changed.")
+
+    elif sub == 'rm':
+        auth = _load_auth()
+        if auth is None:
+            print("No password is set.")
+            return
+        confirm_raw = _read_password_masked("Enter current password to confirm removal: ")
+        if _hash_password(confirm_raw) != auth.get('hash'):
+            print("Incorrect password. Aborted.")
+            return
+        ans = input("Remove password protection? [y/N]: ").strip().lower()
+        if ans == 'y':
+            _delete_auth()
+            print("Password removed.")
+        else:
+            print("Aborted.")
+
+    else:
+        print(f"Unknown subcommand '{sub}'. Use: pass set / pass change / pass rm")
 
 
 def update_time_display():
@@ -94,6 +263,7 @@ def display_loading_screen():
     print("\n")
     load_filesystem()
     time.sleep(0.5)
+    display_lockscreen()
 
 def display_home():
     clear_terminal()
@@ -748,6 +918,10 @@ def help_command(args=None):
     |  ---------- package manager ------------------|
     |install   - installs pip packages              |
     |uninstall - uninstalls pip packages            |
+    |  -------------- security -------------------- |
+    |pass set  - set a boot password (max 8 chars)  |
+    |pass change - change existing password         |
+    |pass rm   - remove password protection         |
     =================================================
 
     """)
@@ -889,6 +1063,7 @@ command_functions = {
     'edit': edit_command,
     'install': install_command,
     'uninstall': uninstall_command,
+    'pass': pass_command,
 }
 
 no_args_command_functions = {
@@ -972,5 +1147,3 @@ def process_commands():
         no_args_command_functions[command]()
     else:
         print(f"'{command}' is not recognized as an internal or external command")
-
-        
