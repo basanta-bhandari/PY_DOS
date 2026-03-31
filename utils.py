@@ -4,7 +4,6 @@ import random
 import os
 import platform
 import json
-import readline
 import readchar
 import atexit
 import pickle
@@ -15,6 +14,13 @@ import tempfile
 import psutil
 from datetime import datetime
 import threading
+try:
+    import readline
+except ImportError:
+    try:
+        import pyreadline3 as readline
+    except ImportError:
+        readline = None
 
 FILESYSTEM_FILE = 'pydos_filesystem.json'
 SAVED_FOLDER = 'saved'
@@ -1202,7 +1208,8 @@ def setup_readline():
     except Exception as e:
         pass
     
-    readline.set_history_length(10)
+    if readline:
+        readline.set_history_length(10)
 
 def save_history():
     history = []

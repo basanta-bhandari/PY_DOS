@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Py-DOS-B1"
-version = "1.1.8"
+version = "1.1.9"
 authors = [
     { name = "Basanta Bhandari", email = "bhandari.basanta.47@gmail.com" }
 ]
@@ -44,3 +44,5 @@ py-modules = ["main", "utils"]
 
 [tool.setuptools.exclude-package-data]
 "*" = ["pydos_filesystem.json", "saved/*"]
+
+dependencies = ["psutil", "readchar", "pyreadline3"]
