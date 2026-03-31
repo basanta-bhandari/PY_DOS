@@ -1,12 +1,12 @@
 Metadata-Version: 2.4
 Name: Py-DOS-B1
-Version: 1.1.7
+Version: 1.1.8
 Summary: An MS-DOS-like CLI OS made entirely in Python.
-Home-page: https://github.com/your-username/Py-DOS-B1
-Author: Basanta Bhandari
-Author-email: bhandari.basanta.47@gmail.com
-Project-URL: Bug Reports, https://github.com/basanta-bhandari/Py-DOS-B1/issues
-Project-URL: Source, https://github.com/basanta-bhandari/Py-DOS-B1/
+Author-email: Basanta Bhandari <bhandari.basanta.47@gmail.com>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/basanta-bhandari/PY_DOS
+Project-URL: Source, https://github.com/basanta-bhandari/PY_DOS
+Project-URL: Bug Reports, https://github.com/basanta-bhandari/PY_DOS/issues
 Keywords: dos,cli,terminal,simulator,shell
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: End Users/Desktop
@@ -19,27 +19,11 @@ Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 Requires-Dist: psutil
 Requires-Dist: readchar
-Dynamic: author
-Dynamic: author-email
-Dynamic: classifier
-Dynamic: description
-Dynamic: description-content-type
-Dynamic: home-page
-Dynamic: keywords
-Dynamic: project-url
-Dynamic: requires-dist
-Dynamic: requires-python
-Dynamic: summary
-
-# PyDOS
-
-A work-in-progress DOS simulator for the terminal. This is an early version that implements basic DOS-style commands and filesystem operations. Still figuring out the best way to handle some features, but it's functional enough to play around with.
 
 ```
                             ██████╗ ██╗   ██╗    ██████╗  ██████╗ ███████╗
@@ -50,27 +34,46 @@ A work-in-progress DOS simulator for the terminal. This is an early version that
                             ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
 ```
 
+A DOS-style terminal simulator built entirely in Python. Implements a virtual filesystem with file and directory management, a built-in package manager, system information display, and support for creating and running Python scripts from within the environment.
+
+## Features
+
+- Virtual filesystem with persistent state across sessions
+- Create, edit, view, copy, move, and rename text and executable files
+- Directory navigation and management
+- Run Python scripts from within the virtual filesystem
+- Live clock display in the terminal
+- Battery status and file 'encryption inside simulator
+- Built-in pip package manager (`install` / `uninstall`)
+- Command history (last 10 commands) saved and restored between sessions
+
+## To be added:
+- Web browsing features( with a network connectivity interface)---------------
+- |lock screen/security| ------------------------------------------------------Done
+- manipulation/veiwing of actual device settings (storage, CPU/GPU usage, etc)
+
+
 ## Installation
 
 ### Prerequisites
-- Python 3.7 or higher (check with `python3 --version` or `python --version`)
-- pip (comes with Python) or pipx
-- required modules(in requirements.txt)
 
-### Installing pipx (recommended method)
+- Python 3.7 or higher
+- pip/pipx
+
+### Installing pipx (recommended)
 
 **Windows:**
 ```powershell
 python -m pip install --user pipx
 python -m pipx ensurepath
 ```
-Restart your command prompt after installation.
+Restart your terminal after running these.
 
 **macOS:**
 ```bash
 brew install pipx
 ```
-Or if you don't have Homebrew:
+Or without Homebrew:
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
@@ -78,11 +81,10 @@ python3 -m pipx ensurepath
 
 **Linux (Ubuntu/Debian):**
 ```bash
-sudo apt update
-sudo apt install pipx
+sudo apt update && sudo apt install pipx
 ```
 
-**Linux (other distributions):**
+**Linux (other distros):**
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
@@ -90,48 +92,61 @@ python3 -m pipx ensurepath
 
 ### Installing PyDOS
 
-**Method 1: Using pipx (recommended)**
+**Using pipx (recommended):**
 ```bash
 pipx install Py-DOS-B1
 ```
 
-**Method 2: Using pip**
+**Using pip:**
 ```bash
 pip install Py-DOS-B1
 ```
 
-On some systems you may need to use `pip3`:
-```bash
-pip3 install Py-DOS-B1
-```
-**Method : Running locally**
+**Running locally:**
 ```bash
 git clone https://github.com/basanta-bhandari/PY_DOS
+cd PY_DOS
+pip install -r requirements.txt
+python main.py
 ```
-on some systems a virtual environment is required
+
+On some systems a virtual environment is required first:
 ```bash
-python -m venv <venv_name>
-```
-installing required modules on virtual enviornment(present in requirements.txt)
-```bash
-pip install <module_name(s)>
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
 ```
 
 ### Running PyDOS
+
 ```bash
 boot
 ```
 
-### Troubleshooting
+## Commands
 
-**Command not found after installation:**
+# Directory,file & system commands can be viewed through the 'help' command.
+
+### Package Manager
+
+ `install <package>`-------->Installs a pip package 
+ `uninstall <package>`------>Uninstalls a pip package 
+
+## Editor
+Text and executable files open in **nvim** on macOS/Linux and **Notepad** on Windows. When using nvim:
+- `i` -> enter insert mode
+- `Esc` -> exit insert mode
+- `:wq` -> save and exit
+- `:q!` -> exit without saving
+
+## Troubleshooting
 - Close and reopen your terminal
-- On Windows: Make sure Python Scripts directory is in your PATH
-- On macOS/Linux: Make sure `~/.local/bin` is in your PATH
-- Try running: `python -m pip show Py-DOS-B1` to verify installation
+- Windows: ensure the Python Scripts directory is in your PATH
+- macOS/Linux: ensure `~/.local/bin` is in your PATH
+- Verify installation: `python -m pip show Py-DOS-B1`
 
 **Permission errors on Linux/macOS:**
-Add `--user` flag to pip install:
 ```bash
 pip install --user Py-DOS-B1
 ```

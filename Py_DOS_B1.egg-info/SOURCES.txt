@@ -1,6 +1,7 @@
+MANIFEST.in
 README.md
 main.py
-setup.py
+pyproject.toml
 utils.py
 Py_DOS_B1.egg-info/PKG-INFO
 Py_DOS_B1.egg-info/SOURCES.txt

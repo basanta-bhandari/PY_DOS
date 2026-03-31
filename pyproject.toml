@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Py-DOS-B1"
+version = "1.1.8"
+authors = [
+    { name = "Basanta Bhandari", email = "bhandari.basanta.47@gmail.com" }
+]
+description = "An MS-DOS-like CLI OS made entirely in Python."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.7"
+dependencies = ["psutil", "readchar"]
+keywords = ["dos", "cli", "terminal", "simulator", "shell"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: System :: Shells",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/basanta-bhandari/PY_DOS"
+Source = "https://github.com/basanta-bhandari/PY_DOS"
+"Bug Reports" = "https://github.com/basanta-bhandari/PY_DOS/issues"
+
+[project.scripts]
+boot = "main:main"
+pydos = "main:main"
+
+[tool.setuptools]
+py-modules = ["main", "utils"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["pydos_filesystem.json", "saved/*"]
