@@ -1,3 +1,4 @@
-from pydos.core import process_commands, display_loading_screen, display_home
+__version__ = "0.1.0-beta"
 
-__all__ = ["process_commands", "display_loading_screen", "display_home"]
+from .display import display_loading_screen, display_home
+from .shell.pipeline import process_commands

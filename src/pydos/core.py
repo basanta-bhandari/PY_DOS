@@ -1,17 +1,3 @@
-from .utils import *
-
-def main():
-    display_loading_screen()
-    setup_readline()
-    display_home()
-    
-    while True:
-        try:
-            process_commands()
-        except KeyboardInterrupt:
-            print("\nUse 'quit' command to exit")
-        except Exception as e:
-            print(f"Error: {e}")
-
-if __name__ == "__main__":
-    main()
+from .display import display_loading_screen, display_home
+from .shell.pipeline import process_commands
+from .fs.persistence import setup_readline
