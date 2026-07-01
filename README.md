@@ -9,6 +9,8 @@
 
 A DOS-style terminal simulator built entirely in Python. Implements a virtual filesystem with file and directory management, a built-in package manager, system information display, and support for creating and running Python scripts from within the environment.
 
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+
 ## Features
 
 - Virtual filesystem with persistent state across sessions
@@ -19,11 +21,6 @@ A DOS-style terminal simulator built entirely in Python. Implements a virtual fi
 - Battery status and file 'encryption inside simulator
 - Built-in pip package manager (`install` / `uninstall`)
 - Command history (last 10 commands) saved and restored between sessions
-
-## To be added:
-- Web browsing features( with a network connectivity interface)---------------
-- |lock screen/security| ------------------------------------------------------Done
-- manipulation/veiwing of actual device settings (storage, CPU/GPU usage, etc)
 
 
 ## Installation
@@ -80,7 +77,7 @@ pip install Py-DOS-B1
 git clone https://github.com/basanta-bhandari/PY_DOS
 cd PY_DOS
 pip install -r requirements.txt
-python main.py
+PYTHONPATH=src python -m pydos
 ```
 
 On some systems a virtual environment is required first:
@@ -88,7 +85,7 @@ On some systems a virtual environment is required first:
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+PYTHONPATH=src python -m pydos
 ```
 
 ### Running PyDOS
@@ -99,14 +96,15 @@ boot
 
 ## Commands
 
-# Directory,file & system commands can be viewed through the 'help' command.
+All directory, file & system commands can be viewed through the 'help' command.
 
 ### Package Manager
 
- `install <package>`-------->Installs a pip package 
- `uninstall <package>`------>Uninstalls a pip package 
+`install <package>` ------> Installs a pip package  
+`uninstall <package>` ---> Uninstalls a pip package 
 
 ## Editor
+
 Text and executable files open in **nvim** on macOS/Linux and **Notepad** on Windows. When using nvim:
 - `i` -> enter insert mode
 - `Esc` -> exit insert mode
@@ -114,6 +112,7 @@ Text and executable files open in **nvim** on macOS/Linux and **Notepad** on Win
 - `:q!` -> exit without saving
 
 ## Troubleshooting
+
 - Close and reopen your terminal
 - Windows: ensure the Python Scripts directory is in your PATH
 - macOS/Linux: ensure `~/.local/bin` is in your PATH
@@ -123,3 +122,8 @@ Text and executable files open in **nvim** on macOS/Linux and **Notepad** on Win
 ```bash
 pip install --user Py-DOS-B1
 ```
+
+---
+
+**Status**: Beta (v1.2)  
+Enjoy your retro experience! Feel like a Boomer! 

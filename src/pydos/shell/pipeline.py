@@ -80,8 +80,8 @@ def _strip_flags(args, flags):
 
 def _dispatch_single(raw_cmd, stdin_data=None):
     from ..fs.vfs_ops import (cd_command, mkdir_command, rmdir_command, ls_command,
-                               grep_command, mktf_command, mkef_command, edit_command,
-                               vwtf_command, rm_command, rm_command_ex, copy_command,
+                               grep_command, mkfile_command, mkexe_command, edit_command,
+                               show_command, rm_command, rm_command_ex, copy_command,
                                move_command, rem_command)
     from ..shell.builtins import (run_command, install_command, uninstall_command,
                                    packages_command, echo_command, help_command,
@@ -114,9 +114,9 @@ def _dispatch_single(raw_cmd, stdin_data=None):
         'cd': lambda a: cd_command(a),
         'mkdir': mkdir_command, 'md': mkdir_command,
         'rmdir': rmdir_command, 'rd': rmdir_command,
-        'mktf': mktf_command, 'touch': mktf_command,
-        'mkef': mkef_command,
-        'vwtf': vwtf_command, 'cat': vwtf_command, 'type': vwtf_command,
+        'mktf': mkfile_command, 'touch': mkfile_command,
+        'mkef': mkexe_command,
+        'vwtf': show_command, 'cat': show_command, 'type': show_command,
         'copy': copy_command, 'move': move_command, 'rem': rem_command,
         'edit': edit_command,
         'run': run_command, 'start': run_command,

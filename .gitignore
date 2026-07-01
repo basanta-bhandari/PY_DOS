@@ -10,4 +10,5 @@ pydos_filesystem.json
 MANIFEST.in
 Py_DOS_B1.egg-info
 /testenv
+/outenv
 
