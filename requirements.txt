@@ -1,3 +1,7 @@
+# Core dependencies
 psutil==7.1.3
 readchar==4.2.1
 pyreadline3==3.1.0
+
+# Build/Installation (required for 'pip install -e .')
+setuptools>=61.0

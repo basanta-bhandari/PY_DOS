@@ -75,14 +75,57 @@ edit main.rub
 mygame
 ```
 
+## Quick Start (No Installation Required)
 
+If you have Python 3.7+ already installed, you can run PyDOS directly without installing pip:
+
+```bash
+cd /path/to/PY_DOS
+PYTHONPATH=src python -m pydos
+```
+
+Or if you have the dependencies installed:
+```bash
+PYTHONPATH=src python3 -m pydos
+```
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.7 or higher
-- pip/pipx
+- pip/pipx (optional - only needed if you want to install as a package)
+
+### Installing pip (if not already installed)
+
+**Linux:**
+```bash
+# Debian/Ubuntu
+sudo apt update && sudo apt install python3-pip
+
+# Fedora/RHEL
+sudo dnf install python3-pip
+
+# Arch
+sudo pacman -S python-pip
+
+# Alpine
+sudo apk add py3-pip
+```
+
+**macOS:**
+```bash
+# With Homebrew
+brew install python3
+
+# Python 3 comes with pip by default
+```
+
+**Windows:**
+```powershell
+# Download from https://www.python.org/downloads/
+# Python 3.7+ includes pip by default
+```
 
 ### Installing pipx (recommended)
 
@@ -132,6 +175,15 @@ git clone https://github.com/basanta-bhandari/PY_DOS
 cd PY_DOS
 pip install -r requirements.txt
 PYTHONPATH=src python -m pydos
+```
+
+**Development install (editable mode):**
+```bash
+git clone https://github.com/basanta-bhandari/PY_DOS
+cd PY_DOS
+pip install -r requirements.txt
+pip install -e .
+boot
 ```
 
 On some systems a virtual environment is required first:
