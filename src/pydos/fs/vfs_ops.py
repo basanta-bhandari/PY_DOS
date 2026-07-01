@@ -103,8 +103,8 @@ def grep_command(args):
         tokens = shlex.split(args)
     except ValueError:
         tokens = args.split()
-    flags  = [t for t in tokens if t.startswith('-')]
-    rest   = [t for t in tokens if not t.startswith('-')]
+    flags   = [t for t in tokens if t.startswith('-')]
+    rest    = [t for t in tokens if not t.startswith('-')]
     if not rest:
         print("grep: missing pattern"); return 1
     pattern     = rest[0]
@@ -136,9 +136,10 @@ def _open_editor(temp_path):
     os.system(f"{editor} {temp_path}")
     state.editor_open = False
 
-def mktf_command(args):
+def mkfile_command(args):
+    """Create a text file (formerly mktf)."""
     if not args:
-        print("Usage: mktf <filename>"); return
+        print("Usage: mkfile <filename>"); return
     fpath = join_path(state.current_directory, args)
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
         tmp = f.name
@@ -155,9 +156,10 @@ def mktf_command(args):
     save_file_contents(); save_filesystem()
     print(f"Text file '{args}' created.")
 
-def mkef_command(args):
+def mkexe_command(args):
+    """Create an executable file (formerly mkef)."""
     if not args:
-        print("Usage: mkef <filename>"); return
+        print("Usage: mkexe <filename>"); return
     fpath = join_path(state.current_directory, args)
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
         tmp = f.name
@@ -192,9 +194,10 @@ def edit_command(args):
     save_file_contents(); save_filesystem()
     print(f"Saved '{args}'")
 
-def vwtf_command(args):
+def show_command(args):
+    """View file contents (formerly vwtf)."""
     if not args:
-        print("Usage: vwtf <filename>"); return
+        print("Usage: show <filename>"); return
     fpath = join_path(state.current_directory, args)
     if fpath in directory_contents:
         print(directory_contents[fpath]['content'])
@@ -282,3 +285,4 @@ def rem_command(args):
     kernel[state.current_directory]['contents'][new] = {'type': 'file'}
     save_file_contents(); save_filesystem()
     print(f"'{old}' renamed to '{new}'.")
+

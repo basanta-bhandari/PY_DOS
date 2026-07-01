@@ -177,7 +177,7 @@ def install_via_github_deb():
     if not deb_arch:
         print(f"[!] Unknown arch '{platform.machine()}'")
         return False
-    print("[Mutiny] Fetching latest Yggdrasil release from GitHub...")
+    print("[Lantern] Fetching latest Yggdrasil release from GitHub...")
     r = run(['curl','-fsSL',
              'https://api.github.com/repos/yggdrasil-network/yggdrasil-go/releases/latest'],
             capture_output=True, text=True)
@@ -201,7 +201,7 @@ def install_via_github_deb():
 def setup_desktop():
     # ── 1. Install ────────────────────────────────────────────────────────
     if not (shutil.which('yggdrasilctl') or shutil.which('yggdrasil')):
-        print("[Mutiny] Yggdrasil not found. Installing...")
+        print("[Lantern] Yggdrasil not found. Installing...")
         cache_sudo()
         detected = _detect_package_manager()
         pms      = detected['package_managers']
@@ -228,12 +228,12 @@ def setup_desktop():
             print("Manual: https://yggdrasil-network.github.io/installation.html")
             return
     else:
-        print("[Mutiny] Yggdrasil already installed.")
+        print("[Lantern] Yggdrasil already installed.")
 
     # ── 2. Generate config if missing ─────────────────────────────────────
     conf_path = '/etc/yggdrasil.conf'
     if not os.path.exists(conf_path):
-        print("[Mutiny] Generating default config...")
+        print("[Lantern] Generating default config...")
         result = subprocess.run(
             ['yggdrasil', '-genconf'],
             capture_output=True, text=True
@@ -250,11 +250,11 @@ def setup_desktop():
             capture_output=True, text=True
         ).stdout.strip()
         if status != 'active':
-            print("[Mutiny] Starting Yggdrasil service...")
+            print("[Lantern] Starting Yggdrasil service...")
             run(['sudo','systemctl','enable','--now','yggdrasil'])
             time.sleep(2)
         else:
-            print("[Mutiny] Service is running.")
+            print("[Lantern] Service is running.")
 
     # ── 4. Your address ───────────────────────────────────────────────────
     my_addr = find_yggdrasil_address()
@@ -333,7 +333,7 @@ def setup_desktop():
 
     # ── 6. Done ───────────────────────────────────────────────────────────
     print(f"""
-[Mutiny] All set.
+[Lantern] All set.
 
   Your address : [{my_addr}]
   Commands     :
@@ -342,33 +342,33 @@ def setup_desktop():
 """)
 
 def setup_termux():
-    print("[Mutiny] Termux can't open a TUN device without root.")
+    print("[Lantern] Termux can't open a TUN device without root.")
     print("Install the Yggdrasil Android app instead:")
     print("  F-Droid : https://f-droid.org/packages/eu.neilalexander.yggdrasil/")
     print("  GitHub  : https://github.com/yggdrasil-network/yggdrasil-android/releases")
     input("\nPress ENTER once the app shows it's connected... ")
     addr = find_yggdrasil_address()
     if addr:
-        print(f"[Mutiny] Your address: [{addr}]")
+        print(f"[Lantern] Your address: [{addr}]")
     else:
         print("[!] Couldn't detect address — copy it from inside the app.")
     print("\nRun: run community")
 
 def main():
-    print("=== MUTINY SETUP ===\n")
+    print("=== LANTERN SETUP ===\n")
     if is_termux():
         setup_termux()
         return
     sys_info = _detect_os_info()
     if sys_info['system'] == 'Darwin':
-        print("[Mutiny] macOS: https://yggdrasil-network.github.io/installation-mac.html")
+        print("[Lantern] macOS: https://yggdrasil-network.github.io/installation-mac.html")
         addr = find_yggdrasil_address()
         if addr:
             print(f"Your address: [{addr}]")
         if shutil.which('yggdrasil'):
             setup_desktop()
     elif sys_info['system'] == 'Windows':
-        print("[Mutiny] Windows: https://yggdrasil-network.github.io/installation-windows.html")
+        print("[Lantern] Windows: https://yggdrasil-network.github.io/installation-windows.html")
     else:
         setup_desktop()
 

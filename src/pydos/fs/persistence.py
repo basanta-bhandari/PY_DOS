@@ -10,7 +10,7 @@ _LEGACY_BIN     = f'{SAVED_FOLDER}/file_contents.bin'
 def ensure_saved_folder():
     Path(SAVED_FOLDER).mkdir(exist_ok=True)
 
-# ── file contents ────────────────────────────────────────────────────────────
+# ── file contents ─────────────────────────────────────────────────────────────
 
 def save_file_contents():
     try:
@@ -21,8 +21,6 @@ def save_file_contents():
         print(f"Error saving file contents: {e}")
 
 def load_file_contents():
-    global directory_contents
-    # migrate legacy pickle
     legacy = Path(_LEGACY_BIN)
     if legacy.exists():
         try:
@@ -43,7 +41,7 @@ def load_file_contents():
     except Exception as e:
         print(f"Error loading file contents: {e}")
 
-# ── filesystem ───────────────────────────────────────────────────────────────
+# ── filesystem ────────────────────────────────────────────────────────────────
 
 def save_filesystem():
     try:
@@ -51,6 +49,7 @@ def save_filesystem():
             'kernel':            kernel,
             'current_directory': state.current_directory,
             'sys_profile':       state.sys_profile,
+            'aliases':           state.aliases,
         }
         try:
             import readline
@@ -76,6 +75,7 @@ def load_filesystem():
             kernel.update(data.get('kernel', {}))
             state.current_directory = data.get('current_directory', '/')
             state.sys_profile       = data.get('sys_profile', {})
+            state.aliases           = data.get('aliases', {})
             load_file_contents()
             print("Filesystem loaded from previous session.")
         except Exception:
@@ -84,7 +84,7 @@ def load_filesystem():
         print("State: CS [N/E]")
     reconcile_kernel_flat_index()
 
-# ── history ──────────────────────────────────────────────────────────────────
+# ── history ───────────────────────────────────────────────────────────────────
 
 def setup_readline():
     try:
@@ -106,6 +106,7 @@ def save_on_exit():
                 data = json.load(f)
         data['kernel']            = kernel
         data['current_directory'] = state.current_directory
+        data['aliases']           = state.aliases
         try:
             import readline
             data['command_history'] = [

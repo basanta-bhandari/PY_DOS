@@ -10,6 +10,7 @@ class State:
     editor_open: bool = False
     sudo_cached: bool = False
     sys_profile: Dict = field(default_factory=dict)
+    aliases: Dict[str, str] = field(default_factory=dict)
 
 state = State()
 
@@ -29,8 +30,8 @@ kernel: Dict[str, Any] = {
                     'Utilities': {
                         'type': 'directory',
                         'contents': {
-                            'Lynx':   {'type': 'directory', 'contents': {}},
-                            'Mutiny': {'type': 'directory', 'contents': {}},
+                            'Lynx':    {'type': 'directory', 'contents': {}},
+                            'Lantern': {'type': 'directory', 'contents': {}},
                         }
                     }
                 }
@@ -95,3 +96,4 @@ def reset_kernel():
     }
     directory_contents.clear()
     state.current_directory = '/'
+    state.aliases.clear()
