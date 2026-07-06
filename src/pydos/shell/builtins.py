@@ -117,7 +117,7 @@ def _seed_mutiny():
     MUTINY_DIR   = '/Apps/Utilities/Mutiny'
     _ensure_path(MUTINY_DIR)
     try:
-        pkg = resources.files("pydos.appdata.mutiny")
+        pkg = resources.files("pydos.appdata.lantern")
         for fname in ('setup.py', 'community.py'):
             fpath = f"{MUTINY_DIR}/{fname.replace('.py','')}"
             if fpath not in directory_contents:

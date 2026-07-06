@@ -7,7 +7,7 @@
                             ╚═╝        ╚═╝       ╚═════╝  ╚═════╝ ╚══════╝
 ```
 
-A DOS-style terminal simulator built entirely in Python. Implements a virtual filesystem with file and directory management, a built-in package manager, system information display, and support for creating and running Python scripts from within the environment.
+A DOS-style terminal simulator built entirely in Python. Implements a virtual filesystem with file and directory management, a built-in package manager, system information display, and support for creating and running Python scripts from within the environment(Linux + MacOS only).
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 
